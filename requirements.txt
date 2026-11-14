@@ -1,0 +1,6 @@
+# Solo interfaz y gráficos. El algoritmo de flujo máximo es código propio:
+# NO agregar networkx ni ninguna biblioteca que calcule flujo o cortes.
+streamlit
+pyvis
+pandas
+pytest
