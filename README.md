@@ -25,10 +25,10 @@ Las tareas están en el Jira del proyecto (clave **TOG**). Cada ticket tiene su 
    git checkout main && git pull
    git checkout -b TOG-5/edmonds-karp
    ```
-   Al subir la rama, el ticket pasa solo a **En curso**.
+   Al subir la rama, el ticket pasa solo a **En progreso**.
 3. Haz tus commits y sube la rama: `git push -u origin TOG-5/edmonds-karp`.
-4. Abre un Pull Request hacia `main`. Sofía recibe la solicitud de revisión automáticamente.
-5. Cuando Sofía aprueba y se fusiona el PR, el ticket pasa solo a **Listo**.
+4. Abre un Pull Request hacia `main`. El ticket pasa solo a **En revisión** y Sofía recibe la solicitud de revisión.
+5. Cuando Sofía aprueba y se fusiona el PR, el ticket pasa solo a **Completado**.
 
 Reglas del repositorio:
 
