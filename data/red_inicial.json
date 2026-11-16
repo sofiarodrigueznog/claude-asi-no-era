@@ -1,0 +1,25 @@
+{
+  "vertices": ["O", "A", "B", "C", "D", "E", "F", "G", "H", "I", "T"],
+  "arcos": [
+    {"origen": "O", "destino": "A", "capacidad": 12, "activa": true},
+    {"origen": "O", "destino": "B", "capacidad": 10, "activa": true},
+    {"origen": "O", "destino": "C", "capacidad": 9, "activa": true},
+    {"origen": "A", "destino": "D", "capacidad": 6, "activa": true},
+    {"origen": "A", "destino": "E", "capacidad": 5, "activa": true},
+    {"origen": "B", "destino": "D", "capacidad": 4, "activa": true},
+    {"origen": "B", "destino": "F", "capacidad": 7, "activa": true},
+    {"origen": "C", "destino": "F", "capacidad": 5, "activa": true},
+    {"origen": "C", "destino": "G", "capacidad": 6, "activa": true},
+    {"origen": "D", "destino": "H", "capacidad": 7, "activa": true},
+    {"origen": "D", "destino": "E", "capacidad": 2, "activa": true},
+    {"origen": "E", "destino": "H", "capacidad": 3, "activa": true},
+    {"origen": "E", "destino": "I", "capacidad": 3, "activa": true},
+    {"origen": "F", "destino": "I", "capacidad": 6, "activa": true},
+    {"origen": "G", "destino": "I", "capacidad": 4, "activa": true},
+    {"origen": "G", "destino": "T", "capacidad": 5, "activa": true},
+    {"origen": "H", "destino": "T", "capacidad": 12, "activa": true},
+    {"origen": "I", "destino": "T", "capacidad": 12, "activa": true}
+  ],
+  "origen": "O",
+  "destino": "T"
+}
