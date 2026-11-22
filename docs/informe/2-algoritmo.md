@@ -22,8 +22,9 @@ envían por cada ruta. Para ser válido debe cumplir dos condiciones:
 - **Conservación:** en todo vértice distinto de $O$ y $T$, lo que entra es igual a lo que sale.
   Un centro intermedio no produce ni acumula paquetes.
 
-El valor del flujo, $|f|$, es la cantidad total que sale de $O$ (que es igual a la que llega a $T$).
-El flujo máximo se denota $f^*$.
+El valor del flujo, $|x|$, es la cantidad neta que sale de $O$ (que es igual a la neta que llega a
+$T$). Se denota $f^*$ a un flujo máximo y $|f^*|$ a su valor. El subíndice $f$ en $c_f$ y $G_f$ se
+refiere al flujo actual $x$.
 
 ### Grafo residual
 
@@ -131,10 +132,11 @@ de iteraciones depende solo de $|V|$ y $|E|$.
 
 ### Aplicación a nuestra red
 
-Con la red de la sección 1 ($|V| = 11$, $|E| = 18$), el flujo máximo no puede superar la capacidad
-total que sale del origen: $c(O,A) + c(O,B) + c(O,C) = 12 + 10 + 9 = 31$. Las cotas quedan:
+Con la red de la sección 1 ($|V| = 11$, $|E| = 18$), el flujo máximo no puede superar lo que sale
+del origen ($12 + 10 + 9 = 31$) ni lo que llega al destino ($5 + 12 + 12 = 29$). Por lo tanto,
+$|f^*| \le \min(31, 29) = 29$ y las cotas quedan:
 
-- Ford–Fulkerson: $|E| \cdot |f^*| \le 18 \cdot 31 = 558$.
+- Ford–Fulkerson: $|E| \cdot |f^*| \le 18 \cdot 29 = 522$.
 - Edmonds–Karp: $|V| \cdot |E|^2 = 11 \cdot 18^2 = 3564$.
 
 Para esta red en particular la cota de Ford–Fulkerson es menor. Sin embargo, ambas son cotas del
@@ -151,9 +153,10 @@ Se elige **Edmonds–Karp** por las siguientes razones:
    un cambio en las capacidades no puede disparar el tiempo de ejecución.
 2. **Terminación garantizada.** No depende de que las capacidades sean enteras. Aunque en este
    proyecto lo son, el algoritmo queda correcto incluso si esa condición cambiara.
-3. **Resultados reproducibles.** BFS siempre elige el camino más corto, por lo que la secuencia de
-   caminos aumentantes es la misma en cada ejecución. Esto facilita mostrar el paso a paso en el
-   informe y comparar los resultados con cálculos a mano.
+3. **Caminos fáciles de seguir.** En cada iteración BFS entrega un camino aumentante con la menor
+   cantidad de arcos, lo que facilita mostrar el paso a paso en el informe y comparar los resultados
+   con cálculos a mano. Si hay varios con esa cantidad, el elegido depende del orden en que se
+   recorren los vecinos.
 4. **Misma implementación base.** Al ser una variante de Ford–Fulkerson, se conserva toda la lógica
    del grafo residual, del cuello de botella y de la actualización del flujo. Solo cambia la búsqueda
    del camino, que con BFS además es fácil de implementar con una cola.
