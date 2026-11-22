@@ -3,7 +3,6 @@
 from pathlib import Path
 
 from src.red import Red
-from src.resultado_prueba import FLUJO_PRUEBA
 from src.verificacion import (
     calcular_valor_flujo,
     verificar_capacidades,
@@ -22,6 +21,14 @@ ARCOS_FIGURA_1 = [
 FLUJO_FIGURA_1 = {
     ("O", "A"): 8, ("O", "B"): 6, ("A", "C"): 5, ("A", "D"): 3,
     ("B", "D"): 6, ("C", "T"): 5, ("D", "T"): 9,
+}
+
+# Flujo máximo de la red inicial: salen 11 + 8 + 6 = 25 de O.
+FLUJO_RED_INICIAL = {
+    ("O", "A"): 11, ("O", "B"): 8, ("O", "C"): 6, ("A", "D"): 6, ("A", "E"): 5,
+    ("B", "D"): 2, ("B", "F"): 6, ("C", "F"): 0, ("C", "G"): 6, ("D", "H"): 7,
+    ("D", "E"): 1, ("E", "H"): 3, ("E", "I"): 3, ("F", "I"): 6, ("G", "I"): 1,
+    ("G", "T"): 5, ("H", "T"): 10, ("I", "T"): 10,
 }
 
 
@@ -57,8 +64,8 @@ def test_flujo_de_la_figura_1_es_valido_y_vale_14():
 
 def test_flujo_verificado_de_la_red_inicial_es_valido_y_vale_25():
     red = Red.cargar(RED_INICIAL)
-    assert verificar_flujo(red, FLUJO_PRUEBA, "O", "T") == []
-    assert calcular_valor_flujo(FLUJO_PRUEBA, "O") == 25
+    assert verificar_flujo(red, FLUJO_RED_INICIAL, "O", "T") == []
+    assert calcular_valor_flujo(FLUJO_RED_INICIAL, "O") == 25
 
 
 def test_flujo_cero_es_valido():
