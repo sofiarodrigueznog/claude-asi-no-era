@@ -1,42 +1,44 @@
 """Pruebas de la interfaz base (app.py)."""
 
+import app
 from src.red import Red
 from app import (
     ARCHIVO_RED,
     COLOR_DESTINO,
     COLOR_ORIGEN,
-    calcular_flujo_maximo,
+    COLOR_RUTA_SATURADA,
+    calcular_resultado,
     construir_grafo,
     html_del_grafo,
 )
 
 
-def test_resultado_de_prueba_para_la_red_inicial():
+def test_la_interfaz_usa_las_firmas_acordadas(monkeypatch):
     red = Red.cargar(ARCHIVO_RED)
-    resultado = calcular_flujo_maximo(red, "O", "T")
+    flujo = {("A", "D"): 6}
+    llamadas = []
 
-    assert resultado["es_prueba"] is True
-    assert (resultado["origen"], resultado["destino"]) == ("O", "T")
-    assert resultado["flujo_maximo"] == 25
-    assert resultado["flujo_por_arco"][("O", "A")] == 11
-    assert resultado["flujo_por_arco"][("H", "T")] == 10
-    assert resultado["corte_minimo"]["capacidad"] == 25
-    assert resultado["corte_minimo"]["arcos"] == [
-        ("C", "G"),
-        ("D", "H"),
-        ("E", "H"),
-        ("E", "I"),
-        ("F", "I"),
-    ]
+    def flujo_falso(*args):
+        llamadas.append(args)
+        return 6, flujo
 
+    def corte_falso(*args):
+        llamadas.append(args)
+        return {"A"}, {"D"}, [("A", "D")], 6
 
-def test_resultado_de_prueba_para_otro_par_de_centros():
-    red = Red.cargar(ARCHIVO_RED)
-    resultado = calcular_flujo_maximo(red, "A", "T")
+    monkeypatch.setattr(app, "edmonds_karp", flujo_falso)
+    monkeypatch.setattr(app, "corte_minimo", corte_falso)
+    resultado = calcular_resultado(red, "A", "D")
 
-    # Capacidad que sale de A (6 + 5) y que llega a T (5 + 12 + 12).
-    assert resultado["flujo_maximo"] == 11
-    assert resultado["flujo_por_arco"] == {}
+    assert llamadas == [(red, "A", "D"), (red, flujo, "A")]
+    assert resultado["flujo_maximo"] == 6
+    assert resultado["flujo_por_arco"] == flujo
+    assert resultado["corte_minimo"] == {
+        "S": {"A"},
+        "T": {"D"},
+        "arcos": [("A", "D")],
+        "capacidad": 6,
+    }
 
 
 def test_el_grafo_muestra_sentido_capacidad_y_extremos():
@@ -56,13 +58,14 @@ def test_el_grafo_muestra_sentido_capacidad_y_extremos():
 
 def test_el_grafo_resalta_rutas_saturadas():
     red = Red.cargar(ARCHIVO_RED)
-    resultado = calcular_flujo_maximo(red, "O", "T")
-    grafo = construir_grafo(red, "O", "T", resultado["flujo_por_arco"])
+    grafo = construir_grafo(red, "O", "T", {("O", "A"): 12, ("O", "C"): 6})
 
     saturada = next(e for e in grafo.edges if e["from"] == "O" and e["to"] == "A")
-    assert "f=11" in saturada["label"]
+    assert "f=12" in saturada["label"]
+    assert saturada["color"] == COLOR_RUTA_SATURADA
     libre = next(e for e in grafo.edges if e["from"] == "O" and e["to"] == "C")
     assert "f=6" in libre["label"]
+    assert libre["color"] != COLOR_RUTA_SATURADA
 
 
 def test_el_html_del_grafo_se_puede_incrustar():

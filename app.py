@@ -4,15 +4,16 @@ Primera versión de la interfaz Streamlit del simulador de una red de distribuci
 Muestra la red de `data/red_inicial.json` con pyvis (centros, sentido de cada ruta y su
 capacidad), permite elegir origen y destino e incluye el botón «Calcular flujo máximo».
 
-Mientras no existan `src/flujo.py` y `src/corte.py`, el botón usa un resultado de prueba.
-La firma que la interfaz espera de esos módulos es:
+La interfaz usa las firmas acordadas:
 
-    calcular_flujo_maximo(red: Red, origen: str, destino: str) -> dict
+    edmonds_karp(red, s, t) -> (valor_maximo, flujo)
+    corte_minimo(red, flujo, s) -> (S, T, arcos_corte, capacidad_corte)
 
-y el diccionario devuelto tiene las claves `origen`, `destino`, `flujo_maximo`,
-`flujo_por_arco` (pares (u, v) → caudal), `corte_minimo` y `es_prueba`. Cuando lleguen
-los módulos reales basta con reemplazar el cuerpo de `calcular_flujo_maximo`; el resto
-de la interfaz no cambia.
+Mientras no existan `src/flujo.py` y `src/corte.py` vienen de `src/resultado_prueba.py`.
+Cuando existan, solo se cambia el import por:
+
+    from src.corte import corte_minimo
+    from src.flujo import edmonds_karp
 """
 
 from __future__ import annotations
@@ -24,9 +25,12 @@ import streamlit as st
 from pyvis.network import Network
 
 from src.red import Red, RedInvalidaError
+from src.resultado_prueba import corte_minimo, edmonds_karp
 
 BASE_DIR = Path(__file__).resolve().parent
 ARCHIVO_RED = BASE_DIR / "data" / "red_inicial.json"
+# Los avisos de "prueba" desaparecen solos al cambiar el import por el algoritmo real.
+ES_PRUEBA = edmonds_karp.__module__ == "src.resultado_prueba"
 
 COLOR_ORIGEN = "#2e7d32"
 COLOR_DESTINO = "#c62828"
@@ -55,70 +59,25 @@ OPCIONES_VIS = """
 }
 """
 
-# Resultado verificado para la red inicial con O como origen y T como destino.
-FLUJO_PRUEBA: dict[tuple[str, str], int] = {
-    ("O", "A"): 11,
-    ("O", "B"): 8,
-    ("O", "C"): 6,
-    ("A", "D"): 6,
-    ("A", "E"): 5,
-    ("B", "D"): 2,
-    ("B", "F"): 6,
-    ("C", "F"): 0,
-    ("C", "G"): 6,
-    ("D", "H"): 7,
-    ("D", "E"): 1,
-    ("E", "H"): 3,
-    ("E", "I"): 3,
-    ("F", "I"): 6,
-    ("G", "I"): 1,
-    ("G", "T"): 5,
-    ("H", "T"): 10,
-    ("I", "T"): 10,
-}
 
-CORTE_PRUEBA = {
-    "capacidad": 25,
-    "vertices": ["O", "A", "B", "C", "D", "E", "F"],
-    "arcos": [("C", "G"), ("D", "H"), ("E", "H"), ("E", "I"), ("F", "I")],
-}
-
-
-def calcular_flujo_maximo(red: Red, origen: str, destino: str) -> dict[str, Any]:
+def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
     """
     Entradas: la red validada y los centros origen y destino elegidos en la interfaz.
-    Resultado: diccionario con el flujo máximo, el flujo por ruta y un corte mínimo.
-
-    Es un resultado de prueba: para el par de la red inicial (O → T) devuelve los valores
-    verificados; para cualquier otro par devuelve una cota superior simple. Se sustituye
-    por la llamada a `src/flujo.py` y `src/corte.py` cuando esos módulos estén disponibles.
+    Resultado: diccionario para la interfaz, armado con `edmonds_karp` y `corte_minimo`.
     """
-    if (origen, destino) == (red.origen, red.destino):
-        flujo = CORTE_PRUEBA["capacidad"]
-        flujo_por_arco = {
-            (u, v): caudal
-            for (u, v), caudal in FLUJO_PRUEBA.items()
-            if red.existe_ruta(u, v) and caudal <= red.capacidad(u, v)
-        }
-        corte = {
-            "capacidad": CORTE_PRUEBA["capacidad"],
-            "vertices": [v for v in CORTE_PRUEBA["vertices"] if v in red.vertices],
-            "arcos": [(u, v) for (u, v) in CORTE_PRUEBA["arcos"] if red.existe_ruta(u, v)],
-        }
-    else:
-        salida = sum(red.capacidad(origen, v) for v in red.vertices)
-        entrada = sum(red.capacidad(u, destino) for u in red.vertices)
-        flujo = min(salida, entrada)
-        flujo_por_arco = {}
-        corte = {"capacidad": flujo, "vertices": [origen], "arcos": []}
-
+    valor_maximo, flujo = edmonds_karp(red, origen, destino)
+    lado_s, lado_t, arcos_corte, capacidad_corte = corte_minimo(red, flujo, origen)
     return {
         "origen": origen,
         "destino": destino,
-        "flujo_maximo": flujo,
-        "flujo_por_arco": flujo_por_arco,
-        "corte_minimo": corte,
-        "es_prueba": True,
+        "flujo_maximo": valor_maximo,
+        "flujo_por_arco": flujo,
+        "corte_minimo": {
+            "S": lado_s,
+            "T": lado_t,
+            "arcos": arcos_corte,
+            "capacidad": capacidad_corte,
+        },
     }
 
 
@@ -162,7 +121,7 @@ def construir_grafo(
         if not arco.activa:
             detalles.append("Ruta desactivada (capacidad efectiva 0)")
         if flujo is not None:
-            detalles.append(f"Flujo de prueba: {flujo} paquetes/h")
+            detalles.append(f"Flujo: {flujo} paquetes/h")
 
         etiqueta = str(arco.capacidad)
         if flujo is not None:
@@ -200,7 +159,7 @@ def html_del_grafo(grafo: Network) -> str:
 
 
 def main() -> None:
-    """Dibuja la interfaz: red, selectores de extremos, botón y resultado de prueba."""
+    """Dibuja la interfaz: red, selectores de extremos, botón y resultado."""
     st.set_page_config(page_title="Simulador de red de flujo", page_icon="📦", layout="wide")
     st.title("📦 Simulador de una red de distribución de paquetes")
     st.caption(
@@ -230,7 +189,8 @@ def main() -> None:
             "Calcular flujo máximo", type="primary", disabled=not extremos_validos
         )
         st.markdown("---")
-        st.caption("Resultado de prueba hasta que estén `src/flujo.py` y `src/corte.py`.")
+        if ES_PRUEBA:
+            st.caption("Resultado de prueba hasta que estén `src/flujo.py` y `src/corte.py`.")
 
     clave = (origen, destino)
     if st.session_state.get("_clave_resultado") != clave:
@@ -238,12 +198,16 @@ def main() -> None:
         st.session_state["_clave_resultado"] = clave
 
     if calcular and extremos_validos:
-        st.session_state["resultado"] = calcular_flujo_maximo(red, origen, destino)
+        try:
+            st.session_state["resultado"] = calcular_resultado(red, origen, destino)
+        except NotImplementedError as aviso:
+            st.info(str(aviso))
     resultado = st.session_state.get("resultado")
 
     if resultado is not None:
         col1, col2, col3 = st.columns(3)
-        col1.metric("Flujo máximo (prueba)", f"{resultado['flujo_maximo']} paquetes/h")
+        titulo_flujo = "Flujo máximo (prueba)" if ES_PRUEBA else "Flujo máximo"
+        col1.metric(titulo_flujo, f"{resultado['flujo_maximo']} paquetes/h")
         col2.metric("Centros", len(red.vertices))
         col3.metric("Rutas", len(red.arcos()))
 
@@ -258,7 +222,7 @@ def main() -> None:
     )
 
     if resultado is not None:
-        with st.expander("Detalle del resultado de prueba"):
+        with st.expander("Detalle del resultado"):
             st.markdown(f"**Origen:** {resultado['origen']} · **Destino:** {resultado['destino']}")
             if resultado["flujo_por_arco"]:
                 st.write("Flujo asignado por ruta:")
@@ -277,10 +241,11 @@ def main() -> None:
             corte = resultado["corte_minimo"]
             rutas_corte = ", ".join(f"{u} → {v}" for u, v in corte["arcos"]) or "—"
             st.markdown(
-                f"**Corte mínimo de prueba:** {corte['capacidad']} paquetes/h · "
+                f"**Corte mínimo:** {corte['capacidad']} paquetes/h · "
                 f"rutas: {rutas_corte}"
             )
-            st.info("Este resultado es ilustrativo y se reemplazará por los módulos reales.")
+            if ES_PRUEBA:
+                st.info("Este resultado es ilustrativo y se reemplazará por los módulos reales.")
 
 
 if __name__ == "__main__":
