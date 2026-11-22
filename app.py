@@ -18,6 +18,7 @@ Cuando existan, solo se cambia el import por:
 
 from __future__ import annotations
 
+from math import hypot
 from pathlib import Path
 from typing import Any
 
@@ -43,21 +44,30 @@ OPCIONES_VIS = """
 {
   "edges": {
     "arrows": {"to": {"enabled": true, "scaleFactor": 0.5}},
-    "font": {"size": 12, "align": "top", "strokeWidth": 2, "strokeColor": "#ffffff"}
+    "font": {"size": 18, "align": "horizontal", "strokeWidth": 0, "background": "#ffffff"},
+    "smooth": false
   },
-  "nodes": {"shape": "dot", "font": {"size": 16}},
-  "physics": {
-    "solver": "forceAtlas2Based",
-    "forceAtlas2Based": {
-      "gravitationalConstant": -70,
-      "springLength": 140,
-      "springConstant": 0.06
-    },
-    "stabilization": {"iterations": 250}
-  },
+  "layout": {"randomSeed": 1},
+  "physics": {"enabled": false},
   "interaction": {"hover": true, "tooltipDelay": 120}
 }
 """
+
+# Misma disposición que la figura del informe: O a la izquierda y T a la derecha.
+POSICIONES = {
+    "O": (0, 0),
+    "A": (180, -165),
+    "B": (180, 0),
+    "C": (180, 165),
+    "D": (330, -220),
+    "E": (480, -70),
+    "F": (360, 77),
+    "G": (360, 220),
+    "H": (600, -143),
+    "I": (600, 11),
+    "T": (780, 0),
+}
+RADIO_CENTRO = 28
 
 
 def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
@@ -81,6 +91,27 @@ def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
     }
 
 
+def pasa_sobre_un_centro(origen: str, destino: str) -> bool:
+    """
+    Entradas: los extremos de una ruta.
+    Resultado: True si su flecha recta pasaría por encima de otro centro; en ese caso se
+    dibuja curva para que se vea (ocurre al agregar conexiones como O → T).
+    """
+    if origen not in POSICIONES or destino not in POSICIONES:
+        return False
+    (x1, y1), (x2, y2) = POSICIONES[origen], POSICIONES[destino]
+    dx, dy = x2 - x1, y2 - y1
+    largo = hypot(dx, dy)
+    for centro, (x, y) in POSICIONES.items():
+        if centro in (origen, destino):
+            continue
+        avance = ((x - x1) * dx + (y - y1) * dy) / largo
+        distancia = abs((x - x1) * dy - (y - y1) * dx) / largo
+        if 0 < avance < largo and distancia < RADIO_CENTRO:
+            return True
+    return False
+
+
 def construir_grafo(
     red: Red,
     origen: str,
@@ -99,7 +130,6 @@ def construir_grafo(
         directed=True,
         notebook=False,
         bgcolor="#ffffff",
-        font_color="#263238",
         # Incluye vis-network en el HTML: así el mapa se ve aunque el navegador no
         # tenga acceso a internet y no se crea una carpeta `lib/` en el proyecto.
         cdn_resources="in_line",
@@ -108,12 +138,24 @@ def construir_grafo(
 
     for vertice in red.vertices:
         if vertice == origen:
-            color, size, titulo = COLOR_ORIGEN, 26, f"Origen: {vertice}"
+            color, color_texto, titulo = COLOR_ORIGEN, "#ffffff", f"Origen: {vertice}"
         elif vertice == destino:
-            color, size, titulo = COLOR_DESTINO, 26, f"Destino: {vertice}"
+            color, color_texto, titulo = COLOR_DESTINO, "#ffffff", f"Destino: {vertice}"
         else:
-            color, size, titulo = COLOR_CENTRO, 18, f"Centro: {vertice}"
-        grafo.add_node(vertice, label=vertice, title=titulo, color=color, size=size)
+            color, color_texto, titulo = COLOR_CENTRO, "#263238", f"Centro: {vertice}"
+        # Un centro que no esté en POSICIONES lo ubica vis con semilla fija.
+        posicion = dict(zip("xy", POSICIONES.get(vertice, ())))
+        # Con "circle" el nombre va dentro del nodo y las flechas no lo tapan.
+        grafo.add_node(
+            vertice,
+            label=vertice,
+            title=titulo,
+            color=color,
+            shape="circle",
+            font={"size": 22, "color": color_texto},
+            widthConstraint=30,
+            **posicion,
+        )
 
     for arco in red.arcos():
         flujo = flujo_por_arco.get((arco.origen, arco.destino))
@@ -136,6 +178,10 @@ def construir_grafo(
         else:
             color = COLOR_RUTA
 
+        curva = {}
+        if pasa_sobre_un_centro(arco.origen, arco.destino):
+            curva["smooth"] = {"enabled": True, "type": "curvedCW", "roundness": 0.3}
+
         grafo.add_edge(
             arco.origen,
             arco.destino,
@@ -145,6 +191,7 @@ def construir_grafo(
             color=color,
             width=3 if flujo else 2,
             dashes=not arco.activa,
+            **curva,
         )
 
     return grafo
