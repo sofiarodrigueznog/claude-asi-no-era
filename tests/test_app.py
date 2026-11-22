@@ -68,6 +68,33 @@ def test_el_grafo_resalta_rutas_saturadas():
     assert libre["color"] != COLOR_RUTA_SATURADA
 
 
+def test_las_etiquetas_no_rotan():
+    grafo = construir_grafo(Red.cargar(ARCHIVO_RED), "O", "T")
+
+    # Si rotan con la flecha, un 6 se lee como 9.
+    assert grafo.options["edges"]["font"]["align"] == "horizontal"
+
+
+def test_la_red_queda_fija_de_izquierda_a_derecha():
+    red = Red.cargar(ARCHIVO_RED)
+    grafo = construir_grafo(red, "O", "T")
+    posicion = {n["id"]: (n["x"], n["y"]) for n in grafo.nodes}
+
+    assert grafo.options["physics"]["enabled"] is False
+    assert len(set(posicion.values())) == len(red.vertices)
+    assert min(posicion, key=lambda v: posicion[v][0]) == "O"
+    assert max(posicion, key=lambda v: posicion[v][0]) == "T"
+
+
+def test_solo_se_curvan_las_rutas_que_taparia_otro_centro():
+    red = Red.cargar(ARCHIVO_RED)
+    assert not any("smooth" in e for e in construir_grafo(red, "O", "T").edges)
+
+    red.agregar_conexion("O", "T", 3)
+    nueva = construir_grafo(red, "O", "T").edges[-1]
+    assert nueva["smooth"]["enabled"] is True
+
+
 def test_el_html_del_grafo_se_puede_incrustar():
     red = Red.cargar(ARCHIVO_RED)
     html = html_del_grafo(construir_grafo(red, "O", "T"))
