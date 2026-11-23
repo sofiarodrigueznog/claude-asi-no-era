@@ -65,7 +65,7 @@ def test_la_particion_separa_el_origen_del_destino():
     assert capacidad == sum(red.capacidad(u, v) for u, v in arcos)
 
 
-def test_coto_maximo_minimo_en_otra_red():
+def test_corte_maximo_minimo_en_otra_red():
     red = red_figura_1()
     valor, flujo = edmonds_karp(red, "O", "T")
 
@@ -87,6 +87,21 @@ def test_una_ruta_desactivada_no_puede_estar_en_el_corte():
     assert capacidad == valor
 
 
+def test_corte_con_cualquier_origen_y_destino():
+    # El destino elegido puede no ser el destino guardado en la red (T).
+    red = red_inicial()
+    for s in red.vertices:
+        for t in red.vertices:
+            if s == t:
+                continue
+            valor, flujo = edmonds_karp(red, s, t)
+            lado_s, lado_t, arcos, capacidad = corte_minimo(red, flujo, s, t)
+
+            assert capacidad == valor
+            assert s in lado_s and t in lado_t
+            assert all(u in lado_s and v in lado_t for u, v in arcos)
+
+
 def test_rechaza_un_centro_que_no_esta_en_la_red():
     red = red_inicial()
     _, flujo = edmonds_karp(red, "O", "T")
@@ -100,7 +115,7 @@ def test_rechaza_un_flujo_que_todavia_no_es_maximo():
     flujo_cero = {(a.origen, a.destino): 0 for a in red.arcos(solo_activos=True)}
 
     with pytest.raises(ValueError, match="no es máximo"):
-        corte_minimo(red, flujo_cero, "O")
+        corte_minimo(red, flujo_cero, "O", "T")
 
 
 @pytest.mark.parametrize(

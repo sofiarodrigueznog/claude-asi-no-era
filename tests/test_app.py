@@ -57,7 +57,7 @@ def test_la_interfaz_usa_las_firmas_acordadas(monkeypatch):
     monkeypatch.setattr(app, "corte_minimo", corte_falso)
     resultado = calcular_resultado(red, "A", "D")
 
-    assert llamadas == [(red, "A", "D"), (red, flujo, "A")]
+    assert llamadas == [(red, "A", "D"), (red, flujo, "A", "D")]
     assert resultado["flujo_maximo"] == 6
     assert resultado["flujo_por_arco"] == flujo
     assert resultado["corte_minimo"] == {
@@ -182,3 +182,16 @@ def test_la_interfaz_muestra_flujo_corte_y_tabla_de_rutas():
     assert len(tabla) == len(Red.cargar(ARCHIVO_RED).arcos())
     assert set(tabla.columns) == {"Ruta", "Flujo", "Capacidad", "Estado", "En corte"}
     assert (tabla["En corte"] == "Sí").sum() == 5
+
+
+def test_la_interfaz_calcula_con_un_destino_distinto_de_t():
+    from streamlit.testing.v1 import AppTest
+
+    interfaz = AppTest.from_file(str(Path(app.__file__).resolve()), default_timeout=30).run()
+    interfaz.selectbox[1].set_value("H").run()
+    interfaz.button[0].click().run()
+    assert not interfaz.exception
+    assert not interfaz.error
+
+    metricas = {m.label: m.value for m in interfaz.metric}
+    assert metricas["Flujo máximo"] == metricas["Capacidad del corte"]

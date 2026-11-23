@@ -74,23 +74,27 @@ def alcanzables(residual: GrafoResidual, s: str) -> set[str]:
 
 
 def corte_minimo(
-    red: Red, flujo: Flujo, s: str
+    red: Red, flujo: Flujo, s: str, t: str | None = None
 ) -> tuple[set[str], set[str], list[tuple[str, str]], int]:
     """
-    Entradas: la red, su flujo máximo y el origen s.
+    Entradas: la red, su flujo máximo de s a t, el origen s y, opcionalmente, el
+    destino t con que se calculó ese flujo (puede ser cualquier centro, no solo el
+    destino guardado en la red).
     Resultado: (S, T, arcos_corte, capacidad_corte), donde S es el conjunto de
     vértices alcanzables en el residual, T su complemento, arcos_corte las rutas
     activas que van de S a T y capacidad_corte la suma de sus capacidades.
-    Lanza ValueError si s no está en la red o si el flujo aún admite un camino de
-    aumento hasta el destino de la red (en ese caso no es máximo y no define un
-    corte mínimo).
+    Lanza ValueError si s o t no están en la red, o si se da t y el flujo aún admite
+    un camino de aumento hasta t (en ese caso no es máximo y no define un corte
+    mínimo).
     """
     if s not in red.vertices:
         raise ValueError("El origen del corte debe ser un centro de la red.")
+    if t is not None and t not in red.vertices:
+        raise ValueError("El destino del corte debe ser un centro de la red.")
 
     residual = construir_residual(red, flujo)
     lado_s = alcanzables(residual, s)
-    if red.destino in lado_s:
+    if t is not None and t in lado_s:
         raise ValueError(
             "El flujo no es máximo: todavía hay un camino de aumento hasta el destino."
         )

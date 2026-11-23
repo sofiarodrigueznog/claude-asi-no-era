@@ -6,7 +6,7 @@ capacidad), permite elegir origen y destino y conecta el botón «Calcular flujo
 con los algoritmos reales:
 
     edmonds_karp(red, s, t) -> (valor_maximo, flujo)
-    corte_minimo(red, flujo, s) -> (S, T, arcos_corte, capacidad_corte)
+    corte_minimo(red, flujo, s, t) -> (S, T, arcos_corte, capacidad_corte)
 
 Además del valor del flujo, se muestra el flujo/capacidad de cada arco (en el dibujo
 y en una tabla), la partición S/T y los arcos del corte resaltados.
@@ -74,7 +74,9 @@ def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
     Resultado: diccionario para la interfaz, armado con `edmonds_karp` y `corte_minimo`.
     """
     valor_maximo, flujo = edmonds_karp(red, origen, destino)
-    lado_s, lado_t, arcos_corte, capacidad_corte = corte_minimo(red, flujo, origen)
+    lado_s, lado_t, arcos_corte, capacidad_corte = corte_minimo(
+        red, flujo, origen, destino
+    )
     return {
         "origen": origen,
         "destino": destino,
@@ -262,8 +264,8 @@ def main() -> None:
     if calcular and extremos_validos:
         try:
             st.session_state["resultado"] = calcular_resultado(red, origen, destino)
-        except NotImplementedError as aviso:
-            st.info(str(aviso))
+        except ValueError as error:
+            st.error(f"No se pudo calcular el flujo: {error}")
     resultado = st.session_state.get("resultado")
 
     if resultado is not None:
