@@ -1,19 +1,15 @@
 """
-Primera versión de la interfaz Streamlit del simulador de una red de distribución.
+Interfaz Streamlit del simulador de una red de distribución.
 
 Muestra la red de `data/red_inicial.json` con pyvis (centros, sentido de cada ruta y su
-capacidad), permite elegir origen y destino e incluye el botón «Calcular flujo máximo».
-
-La interfaz usa las firmas acordadas:
+capacidad), permite elegir origen y destino y conecta el botón «Calcular flujo máximo»
+con los algoritmos reales:
 
     edmonds_karp(red, s, t) -> (valor_maximo, flujo)
-    corte_minimo(red, flujo, s) -> (S, T, arcos_corte, capacidad_corte)
+    corte_minimo(red, flujo, s, t) -> (S, T, arcos_corte, capacidad_corte)
 
-Mientras no existan `src/flujo.py` y `src/corte.py` vienen de `src/resultado_prueba.py`.
-Cuando existan, solo se cambia el import por:
-
-    from src.corte import corte_minimo
-    from src.flujo import edmonds_karp
+Además del valor del flujo, se muestra el flujo/capacidad de cada arco (en el dibujo
+y en una tabla), la partición S/T y los arcos del corte resaltados.
 """
 
 from __future__ import annotations
@@ -25,20 +21,22 @@ from typing import Any
 import streamlit as st
 from pyvis.network import Network
 
+from src.corte import corte_minimo
+from src.flujo import edmonds_karp
 from src.red import Red, RedInvalidaError
-from src.resultado_prueba import corte_minimo, edmonds_karp
 
 BASE_DIR = Path(__file__).resolve().parent
 ARCHIVO_RED = BASE_DIR / "data" / "red_inicial.json"
-# Los avisos de "prueba" desaparecen solos al cambiar el import por el algoritmo real.
-ES_PRUEBA = edmonds_karp.__module__ == "src.resultado_prueba"
 
 COLOR_ORIGEN = "#2e7d32"
 COLOR_DESTINO = "#c62828"
+COLOR_S = "#bbdefb"
+COLOR_T = "#ffcdd2"
 COLOR_CENTRO = "#90caf9"
 COLOR_RUTA = "#455a64"
 COLOR_RUTA_SATURADA = "#ef6c00"
 COLOR_RUTA_INACTIVA = "#b0bec5"
+COLOR_ARCO_CORTE = "#d32f2f"
 
 OPCIONES_VIS = """
 {
@@ -76,7 +74,9 @@ def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
     Resultado: diccionario para la interfaz, armado con `edmonds_karp` y `corte_minimo`.
     """
     valor_maximo, flujo = edmonds_karp(red, origen, destino)
-    lado_s, lado_t, arcos_corte, capacidad_corte = corte_minimo(red, flujo, origen)
+    lado_s, lado_t, arcos_corte, capacidad_corte = corte_minimo(
+        red, flujo, origen, destino
+    )
     return {
         "origen": origen,
         "destino": destino,
@@ -117,13 +117,20 @@ def construir_grafo(
     origen: str,
     destino: str,
     flujo_por_arco: dict[tuple[str, str], int] | None = None,
+    corte: dict[str, Any] | None = None,
 ) -> Network:
     """
-    Entradas: la red, los centros a resaltar y, opcionalmente, el flujo por ruta.
-    Resultado: un grafo dirigido de pyvis con la capacidad en cada flecha; las rutas
-    inactivas se dibujan discontinuas y las saturadas, en otro color.
+    Entradas: la red, los centros a resaltar y, opcionalmente, el flujo por ruta y
+    el corte con las claves `S`, `T` y `arcos`.
+    Resultado: un grafo dirigido de pyvis con la capacidad y el flujo en cada flecha.
+    Los vértices se colorean según su lado del corte (salvo origen y destino, que
+    conservan sus colores), los arcos del corte se resaltan en rojo, las rutas
+    inactivas se dibujan discontinuas y las saturadas, en naranja.
     """
     flujo_por_arco = flujo_por_arco or {}
+    lado_s = corte["S"] if corte else set()
+    lado_t = corte["T"] if corte else set()
+    arcos_corte = set(corte["arcos"]) if corte else set()
     grafo = Network(
         height="520px",
         width="100%",
@@ -138,9 +145,13 @@ def construir_grafo(
 
     for vertice in red.vertices:
         if vertice == origen:
-            color, color_texto, titulo = COLOR_ORIGEN, "#ffffff", f"Origen: {vertice}"
+            color, color_texto, titulo = COLOR_ORIGEN, "#ffffff", f"Origen: {vertice} · S"
         elif vertice == destino:
-            color, color_texto, titulo = COLOR_DESTINO, "#ffffff", f"Destino: {vertice}"
+            color, color_texto, titulo = COLOR_DESTINO, "#ffffff", f"Destino: {vertice} · T"
+        elif vertice in lado_s:
+            color, color_texto, titulo = COLOR_S, "#263238", f"Conjunto S: {vertice}"
+        elif vertice in lado_t:
+            color, color_texto, titulo = COLOR_T, "#263238", f"Conjunto T: {vertice}"
         else:
             color, color_texto, titulo = COLOR_CENTRO, "#263238", f"Centro: {vertice}"
         # Un centro que no esté en POSICIONES lo ubica vis con semilla fija.
@@ -159,19 +170,26 @@ def construir_grafo(
 
     for arco in red.arcos():
         flujo = flujo_por_arco.get((arco.origen, arco.destino))
+        es_corte = (arco.origen, arco.destino) in arcos_corte
         detalles = [f"Capacidad: {arco.capacidad} paquetes/h"]
         if not arco.activa:
             detalles.append("Ruta desactivada (capacidad efectiva 0)")
         if flujo is not None:
             detalles.append(f"Flujo: {flujo} paquetes/h")
+        if es_corte:
+            detalles.append("Arco del corte mínimo")
 
         etiqueta = str(arco.capacidad)
         if flujo is not None:
             etiqueta += f" | f={flujo}"
         if not arco.activa:
             etiqueta += " (inactiva)"
+        if es_corte:
+            etiqueta = "✂ " + etiqueta
 
-        if not arco.activa:
+        if es_corte:
+            color = COLOR_ARCO_CORTE
+        elif not arco.activa:
             color = COLOR_RUTA_INACTIVA
         elif flujo is not None and flujo == arco.capacidad:
             color = COLOR_RUTA_SATURADA
@@ -189,7 +207,7 @@ def construir_grafo(
             title=f"{arco.origen} → {arco.destino}\n" + "\n".join(detalles),
             arrows="to",
             color=color,
-            width=3 if flujo else 2,
+            width=5 if es_corte else (3 if flujo else 2),
             dashes=not arco.activa,
             **curva,
         )
@@ -236,8 +254,7 @@ def main() -> None:
             "Calcular flujo máximo", type="primary", disabled=not extremos_validos
         )
         st.markdown("---")
-        if ES_PRUEBA:
-            st.caption("Resultado de prueba hasta que estén `src/flujo.py` y `src/corte.py`.")
+        st.caption("Resultado calculado con Edmonds–Karp y corte mínimo reales.")
 
     clave = (origen, destino)
     if st.session_state.get("_clave_resultado") != clave:
@@ -247,52 +264,63 @@ def main() -> None:
     if calcular and extremos_validos:
         try:
             st.session_state["resultado"] = calcular_resultado(red, origen, destino)
-        except NotImplementedError as aviso:
-            st.info(str(aviso))
+        except ValueError as error:
+            st.error(f"No se pudo calcular el flujo: {error}")
     resultado = st.session_state.get("resultado")
 
     if resultado is not None:
-        col1, col2, col3 = st.columns(3)
-        titulo_flujo = "Flujo máximo (prueba)" if ES_PRUEBA else "Flujo máximo"
-        col1.metric(titulo_flujo, f"{resultado['flujo_maximo']} paquetes/h")
-        col2.metric("Centros", len(red.vertices))
-        col3.metric("Rutas", len(red.arcos()))
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Flujo máximo", f"{resultado['flujo_maximo']} paquetes/h")
+        col2.metric(
+            "Capacidad del corte", f"{resultado['corte_minimo']['capacidad']} paquetes/h"
+        )
+        col3.metric("Centros", len(red.vertices))
+        col4.metric("Rutas", len(red.arcos()))
 
     st.subheader("Red cargada")
     st.iframe(
         html_del_grafo(
             construir_grafo(
-                red, origen, destino, resultado["flujo_por_arco"] if resultado else None
+                red,
+                origen,
+                destino,
+                resultado["flujo_por_arco"] if resultado else None,
+                resultado["corte_minimo"] if resultado else None,
             )
         ),
         height=540,
     )
 
     if resultado is not None:
+        corte = resultado["corte_minimo"]
+        arcos_corte = set(corte["arcos"])
         with st.expander("Detalle del resultado"):
             st.markdown(f"**Origen:** {resultado['origen']} · **Destino:** {resultado['destino']}")
-            if resultado["flujo_por_arco"]:
-                st.write("Flujo asignado por ruta:")
-                st.dataframe(
-                    [
-                        {
-                            "Ruta": f"{u} → {v}",
-                            "Flujo": caudal,
-                            "Capacidad": red.capacidad(u, v),
-                        }
-                        for (u, v), caudal in resultado["flujo_por_arco"].items()
-                    ],
-                    width="stretch",
-                    hide_index=True,
-                )
-            corte = resultado["corte_minimo"]
+            st.markdown(
+                f"**Partición:** S = {', '.join(sorted(corte['S']))} · "
+                f"T = {', '.join(sorted(corte['T']))}"
+            )
+            flujo = resultado["flujo_por_arco"]
+            st.write("Flujo y capacidad de cada ruta:")
+            st.dataframe(
+                [
+                    {
+                        "Ruta": f"{arco.origen} → {arco.destino}",
+                        "Flujo": flujo.get((arco.origen, arco.destino), 0),
+                        "Capacidad": arco.capacidad,
+                        "Estado": "Activa" if arco.activa else "Inactiva",
+                        "En corte": "Sí" if (arco.origen, arco.destino) in arcos_corte else "",
+                    }
+                    for arco in red.arcos()
+                ],
+                width="stretch",
+                hide_index=True,
+            )
             rutas_corte = ", ".join(f"{u} → {v}" for u, v in corte["arcos"]) or "—"
             st.markdown(
                 f"**Corte mínimo:** {corte['capacidad']} paquetes/h · "
                 f"rutas: {rutas_corte}"
             )
-            if ES_PRUEBA:
-                st.info("Este resultado es ilustrativo y se reemplazará por los módulos reales.")
 
 
 if __name__ == "__main__":

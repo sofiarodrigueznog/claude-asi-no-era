@@ -1,16 +1,43 @@
-"""Pruebas de la interfaz base (app.py)."""
+"""Pruebas de la interfaz (app.py) y de su conexión con los algoritmos reales."""
+
+from pathlib import Path
 
 import app
 from src.red import Red
 from app import (
     ARCHIVO_RED,
+    COLOR_ARCO_CORTE,
     COLOR_DESTINO,
     COLOR_ORIGEN,
     COLOR_RUTA_SATURADA,
+    COLOR_S,
+    COLOR_T,
     calcular_resultado,
     construir_grafo,
     html_del_grafo,
 )
+from src.corte import corte_minimo
+from src.flujo import edmonds_karp
+
+
+def test_la_interfaz_importa_los_algoritmos_reales():
+    assert app.edmonds_karp is edmonds_karp
+    assert app.corte_minimo is corte_minimo
+    assert edmonds_karp.__module__ == "src.flujo"
+    assert corte_minimo.__module__ == "src.corte"
+
+
+def test_el_resultado_de_la_interfaz_es_el_de_los_algoritmos():
+    red = Red.cargar(ARCHIVO_RED)
+    valor, flujo = edmonds_karp(red, "O", "T")
+    _, _, arcos, capacidad = corte_minimo(red, flujo, "O")
+
+    resultado = calcular_resultado(red, "O", "T")
+
+    assert resultado["flujo_maximo"] == valor == 25
+    assert resultado["flujo_por_arco"] == flujo
+    assert resultado["corte_minimo"]["capacidad"] == capacidad == 25
+    assert resultado["corte_minimo"]["arcos"] == arcos
 
 
 def test_la_interfaz_usa_las_firmas_acordadas(monkeypatch):
@@ -30,7 +57,7 @@ def test_la_interfaz_usa_las_firmas_acordadas(monkeypatch):
     monkeypatch.setattr(app, "corte_minimo", corte_falso)
     resultado = calcular_resultado(red, "A", "D")
 
-    assert llamadas == [(red, "A", "D"), (red, flujo, "A")]
+    assert llamadas == [(red, "A", "D"), (red, flujo, "A", "D")]
     assert resultado["flujo_maximo"] == 6
     assert resultado["flujo_por_arco"] == flujo
     assert resultado["corte_minimo"] == {
@@ -68,6 +95,39 @@ def test_el_grafo_resalta_rutas_saturadas():
     assert libre["color"] != COLOR_RUTA_SATURADA
 
 
+def test_los_vertices_muestran_a_que_lado_del_corte_pertenecen():
+    red = Red.cargar(ARCHIVO_RED)
+    valor, flujo = edmonds_karp(red, "O", "T")
+    assert valor == 25
+    corte = calcular_resultado(red, "O", "T")["corte_minimo"]
+    grafo = construir_grafo(red, "O", "T", flujo, corte)
+    colores = {n["id"]: n["color"] for n in grafo.nodes}
+
+    assert colores["O"] == COLOR_ORIGEN
+    assert colores["T"] == COLOR_DESTINO
+    assert colores["A"] == COLOR_S
+    assert colores["F"] == COLOR_S
+    assert colores["G"] == COLOR_T
+    assert colores["H"] == COLOR_T
+
+
+def test_los_arcos_del_corte_se_resaltan_en_el_dibujo():
+    red = Red.cargar(ARCHIVO_RED)
+    resultado = calcular_resultado(red, "O", "T")
+    corte = resultado["corte_minimo"]
+    grafo = construir_grafo(
+        red, "O", "T", resultado["flujo_por_arco"], corte
+    )
+    arcos = {(e["from"], e["to"]): e for e in grafo.edges}
+
+    for u, v in corte["arcos"]:
+        assert arcos[(u, v)]["color"] == COLOR_ARCO_CORTE
+        assert arcos[(u, v)]["width"] == 5
+        assert "✂" in arcos[(u, v)]["label"]
+        assert "Arco del corte mínimo" in arcos[(u, v)]["title"]
+    assert arcos[("O", "A")]["color"] != COLOR_ARCO_CORTE
+
+
 def test_las_etiquetas_no_rotan():
     grafo = construir_grafo(Red.cargar(ARCHIVO_RED), "O", "T")
 
@@ -102,3 +162,36 @@ def test_el_html_del_grafo_se_puede_incrustar():
     assert "<html" in html.lower()
     assert "vis-network" in html
     assert "cdnjs" not in html  # el HTML es autocontenido, sin depender de internet
+
+
+def test_la_interfaz_muestra_flujo_corte_y_tabla_de_rutas():
+    from streamlit.testing.v1 import AppTest
+
+    ruta = Path(app.__file__).resolve()
+    interfaz = AppTest.from_file(str(ruta), default_timeout=30).run()
+    assert not interfaz.exception
+
+    interfaz.button[0].click().run()
+    assert not interfaz.exception
+
+    metricas = {m.label: m.value for m in interfaz.metric}
+    assert metricas["Flujo máximo"] == "25 paquetes/h"
+    assert metricas["Capacidad del corte"] == "25 paquetes/h"
+
+    tabla = interfaz.dataframe[0].value
+    assert len(tabla) == len(Red.cargar(ARCHIVO_RED).arcos())
+    assert set(tabla.columns) == {"Ruta", "Flujo", "Capacidad", "Estado", "En corte"}
+    assert (tabla["En corte"] == "Sí").sum() == 5
+
+
+def test_la_interfaz_calcula_con_un_destino_distinto_de_t():
+    from streamlit.testing.v1 import AppTest
+
+    interfaz = AppTest.from_file(str(Path(app.__file__).resolve()), default_timeout=30).run()
+    interfaz.selectbox[1].set_value("H").run()
+    interfaz.button[0].click().run()
+    assert not interfaz.exception
+    assert not interfaz.error
+
+    metricas = {m.label: m.value for m in interfaz.metric}
+    assert metricas["Flujo máximo"] == metricas["Capacidad del corte"]
