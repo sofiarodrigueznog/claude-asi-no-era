@@ -142,12 +142,12 @@ Por eso el flujo neto que cruza el corte es exactamente su capacidad.
 
 Para cualquier flujo factible $y$ y cualquier corte $(S', V \setminus S')$ con $s \in S'$ y
 $t \notin S'$, se suma la conservación sobre los vértices de $S'$. Lo que entra y sale entre
-vértices de $S'$ se cancela, y queda
+vértices de $S'$ se cancela, y queda (las sumas recorren los arcos $(u,v) \in E$):
 
 $$
-|y| = \sum_{\substack{(u,v) \in E \\ u \in S',\ v \notin S'}} y(u,v)
-    \enspace - \enspace \sum_{\substack{(u,v) \in E \\ u \notin S',\ v \in S'}} y(u,v)
-    \enspace \le \enspace \sum_{\substack{(u,v) \in E \\ u \in S',\ v \notin S'}} c(u,v) = c(S', V \setminus S').
+|y| = \sum_{u \in S',\ v \notin S'} y(u,v)
+    \enspace - \enspace \sum_{u \notin S',\ v \in S'} y(u,v)
+    \enspace \le \enspace \sum_{u \in S',\ v \notin S'} c(u,v) = c(S', V \setminus S').
 $$
 
 La desigualdad usa $y(u,v) \le c(u,v)$ en los arcos que salen de $S'$ y $y(u,v) \ge 0$ en los
