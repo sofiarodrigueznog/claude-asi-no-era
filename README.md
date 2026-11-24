@@ -36,31 +36,97 @@ Reglas del repositorio:
 - GitHub rechaza cualquier rama que no siga el formato `TOG-<número>/<descripcion>`.
 - Una revisión automática ("nombre-de-rama") vuelve a comprobar el formato en cada PR.
 
-## Estructura
-
-```
-src/            modelo de la red, algoritmo de flujo máximo, corte mínimo y verificaciones
-data/           redes en JSON (red inicial, modificaciones y caso de comprobación manual)
-tests/          pruebas automáticas
-docs/informe/   secciones del informe técnico
-app.py          interfaz Streamlit
-```
-
 ## Cómo ejecutar
 
-Requiere Python 3.12.
+Requiere **Python 3.12** y conexión a internet solo para instalar las dependencias. Las
+versiones probadas están fijadas en `requirements.txt`.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
+1. Descargar el código:
+
+   ```bash
+   git clone https://github.com/sofiarodrigueznog/claude-asi-no-era.git
+   cd claude-asi-no-era
+   ```
+
+2. Crear un entorno virtual e instalar las dependencias.
+
+   macOS o Linux:
+
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   py -3.12 -m venv .venv
+   .venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+
+3. Abrir la aplicación:
+
+   ```bash
+   streamlit run app.py
+   ```
+
+   Se abre en el navegador, en http://localhost:8501. Para cerrarla, presionar `Ctrl+C` en la
+   terminal.
+
+4. Correr las pruebas automáticas (con el entorno activado):
+
+   ```bash
+   python -m pytest
+   ```
+
+## Uso de la aplicación
+
+- **Parámetros del envío:** elegir el centro de origen y el de destino, y presionar
+  «Calcular flujo máximo». Se muestran el valor del flujo máximo, la capacidad del corte
+  mínimo, el flujo y la capacidad de cada ruta (en el dibujo y en una tabla) y la partición
+  S / T, con los arcos del corte en rojo.
+- **Modificaciones de la red:** desactivar o reactivar una ruta, cambiar su capacidad (entero
+  de 1 a 12) o agregar una conexión nueva. Los lazos, las rutas repetidas y las recíprocas se
+  rechazan con un mensaje. Después de un cambio, «Recalcular flujo» actualiza el resultado.
+- **Restablecer red inicial** descarta los cambios. Las modificaciones solo viven en la sesión
+  del navegador; el archivo `data/red_inicial.json` no se modifica.
+
+## Estructura del código
+
+```
+app.py                  interfaz Streamlit: dibujo de la red, cálculo y modificaciones
+src/
+  red.py                clase Red: carga del JSON, validaciones del modelo y modificaciones
+  flujo.py              flujo máximo con Edmonds–Karp sobre el grafo residual
+  corte.py              corte mínimo a partir del grafo residual del flujo máximo
+  verificacion.py       comprobaciones de capacidad, conservación y valor de un flujo
+data/
+  red_inicial.json      red principal (11 centros, 18 rutas)
+  caso_manual.json      red pequeña del caso de comprobación manual
+tests/                  pruebas automáticas (pytest), una por módulo y para la interfaz
+docs/informe/           secciones del informe técnico en Markdown y sus figuras
+requirements.txt        dependencias con las versiones probadas
 ```
 
-Pruebas:
+Flujo de un cálculo: `app.py` carga la red con `Red.cargar`, llama a
+`edmonds_karp(red, s, t)` para obtener el valor máximo y el flujo de cada ruta, y después a
+`corte_minimo(red, flujo, s, t)` para obtener los conjuntos S y T, los arcos del corte y su
+capacidad. Las modificaciones usan los métodos de `Red` sobre una copia, de modo que una
+modificación inválida no altera la red.
 
-```bash
-python -m pytest
+Formato de una red en JSON:
+
+```json
+{
+  "vertices": ["O", "A", "T"],
+  "arcos": [
+    {"origen": "O", "destino": "A", "capacidad": 8, "activa": true}
+  ],
+  "origen": "O",
+  "destino": "T"
+}
 ```
 
 ## Condiciones del enunciado
