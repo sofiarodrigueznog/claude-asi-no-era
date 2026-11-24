@@ -122,7 +122,8 @@ Formato de una red en JSON:
 {
   "vertices": ["O", "A", "T"],
   "arcos": [
-    {"origen": "O", "destino": "A", "capacidad": 8, "activa": true}
+    {"origen": "O", "destino": "A", "capacidad": 8, "activa": true},
+    {"origen": "A", "destino": "T", "capacidad": 5, "activa": true}
   ],
   "origen": "O",
   "destino": "T"
