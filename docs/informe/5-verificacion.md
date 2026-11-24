@@ -11,11 +11,11 @@ La red de comprobación está guardada en `data/caso_manual.json`. Tiene seis ce
 rutas, todas con capacidad entera:
 
 $$
-V = \{O,\ A,\ B,\ C,\ D,\ T\}, \qquad |V| = 6, \qquad s = O, \quad t = T.
+V = \lbrace O,\ A,\ B,\ C,\ D,\ T\rbrace, \qquad |V| = 6, \qquad s = O, \quad t = T.
 $$
 
 $$
-E = \{\ (O,A),\ (O,B),\ (A,B),\ (A,C),\ (B,D),\ (C,D),\ (C,T),\ (D,T)\ \}, \qquad |E| = 8.
+E = \lbrace\ (O,A),\ (O,B),\ (A,B),\ (A,C),\ (B,D),\ (C,D),\ (C,T),\ (D,T)\ \rbrace, \qquad |E| = 8.
 $$
 
 | Arco $(u, v)$ | $(O,A)$ | $(O,B)$ | $(A,B)$ | $(A,C)$ | $(B,D)$ | $(C,D)$ | $(C,T)$ | $(D,T)$ |
@@ -49,7 +49,7 @@ botella $c_f(P_k)$.
 residuales $10, 5, 6$:
 
 $$
-c_f(P_1) = \min\{10,\ 5,\ 6\} = 5.
+c_f(P_1) = \min\lbrace 10,\ 5,\ 6\rbrace = 5.
 $$
 
 Quedan $c_f(O,A) = 5$, $c_f(A,C) = 0$ y $c_f(C,T) = 1$, y aparecen los retrocesos
@@ -59,7 +59,7 @@ $c_f(A,O) = c_f(C,A) = c_f(T,C) = 5$.
 $O \to B \to D \to T$, con residuales $5, 7, 8$:
 
 $$
-c_f(P_2) = \min\{5,\ 7,\ 8\} = 5.
+c_f(P_2) = \min\lbrace 5,\ 7,\ 8\rbrace = 5.
 $$
 
 Quedan $c_f(O,B) = 0$, $c_f(B,D) = 2$ y $c_f(D,T) = 3$.
@@ -68,7 +68,7 @@ Quedan $c_f(O,B) = 0$, $c_f(B,D) = 2$ y $c_f(D,T) = 3$.
 a $D$ y a $T$. El camino es $O \to A \to B \to D \to T$, con residuales $5, 4, 2, 3$:
 
 $$
-c_f(P_3) = \min\{5,\ 4,\ 2,\ 3\} = 2.
+c_f(P_3) = \min\lbrace 5,\ 4,\ 2,\ 3\rbrace = 2.
 $$
 
 Quedan $c_f(O,A) = 3$, $c_f(A,B) = 2$, $c_f(B,D) = 0$ y $c_f(D,T) = 1$.
@@ -125,7 +125,7 @@ En la última iteración la BFS alcanzó exactamente los centros $O$, $A$ y $B$.
 define el corte:
 
 $$
-S = \{O,\ A,\ B\}, \qquad V \setminus S = \{C,\ D,\ T\}.
+S = \lbrace O,\ A,\ B\rbrace, \qquad V \setminus S = \lbrace C,\ D,\ T\rbrace.
 $$
 
 Se escribe $V \setminus S$ para no confundir el lado del destino con el vértice $T$. Los arcos
@@ -163,28 +163,28 @@ el teorema de flujo máximo–corte mínimo aplicado a este caso.
 
 En una red tan pequeña también se puede comprobar el corte de forma exhaustiva. $O$ siempre
 está en $S'$ y $T$ nunca, así que hay $2^4 = 16$ cortes posibles, uno por cada subconjunto de
-$\{A, B, C, D\}$:
+$\lbrace A, B, C, D\rbrace$:
 
 | $S'$ | Arcos de $S'$ hacia $V \setminus S'$ | $c(S', V \setminus S')$ |
 |:---|:---|:---:|
-| $\{O\}$ | $(O,A), (O,B)$ | 15 |
-| $\{O, A\}$ | $(O,B), (A,B), (A,C)$ | 14 |
-| $\{O, B\}$ | $(O,A), (B,D)$ | 17 |
-| $\{O, C\}$ | $(O,A), (O,B), (C,D), (C,T)$ | 24 |
-| $\{O, D\}$ | $(O,A), (O,B), (D,T)$ | 23 |
-| $\{O, A, B\}$ | $(A,C), (B,D)$ | **12** |
-| $\{O, A, C\}$ | $(O,B), (A,B), (C,D), (C,T)$ | 18 |
-| $\{O, A, D\}$ | $(O,B), (A,B), (A,C), (D,T)$ | 22 |
-| $\{O, B, C\}$ | $(O,A), (B,D), (C,D), (C,T)$ | 26 |
-| $\{O, B, D\}$ | $(O,A), (D,T)$ | 18 |
-| $\{O, C, D\}$ | $(O,A), (O,B), (C,T), (D,T)$ | 29 |
-| $\{O, A, B, C\}$ | $(B,D), (C,D), (C,T)$ | 16 |
-| $\{O, A, B, D\}$ | $(A,C), (D,T)$ | 13 |
-| $\{O, A, C, D\}$ | $(O,B), (A,B), (C,T), (D,T)$ | 23 |
-| $\{O, B, C, D\}$ | $(O,A), (C,T), (D,T)$ | 24 |
-| $\{O, A, B, C, D\}$ | $(C,T), (D,T)$ | 14 |
+| $\lbrace O\rbrace$ | $(O,A), (O,B)$ | 15 |
+| $\lbrace O, A\rbrace$ | $(O,B), (A,B), (A,C)$ | 14 |
+| $\lbrace O, B\rbrace$ | $(O,A), (B,D)$ | 17 |
+| $\lbrace O, C\rbrace$ | $(O,A), (O,B), (C,D), (C,T)$ | 24 |
+| $\lbrace O, D\rbrace$ | $(O,A), (O,B), (D,T)$ | 23 |
+| $\lbrace O, A, B\rbrace$ | $(A,C), (B,D)$ | **12** |
+| $\lbrace O, A, C\rbrace$ | $(O,B), (A,B), (C,D), (C,T)$ | 18 |
+| $\lbrace O, A, D\rbrace$ | $(O,B), (A,B), (A,C), (D,T)$ | 22 |
+| $\lbrace O, B, C\rbrace$ | $(O,A), (B,D), (C,D), (C,T)$ | 26 |
+| $\lbrace O, B, D\rbrace$ | $(O,A), (D,T)$ | 18 |
+| $\lbrace O, C, D\rbrace$ | $(O,A), (O,B), (C,T), (D,T)$ | 29 |
+| $\lbrace O, A, B, C\rbrace$ | $(B,D), (C,D), (C,T)$ | 16 |
+| $\lbrace O, A, B, D\rbrace$ | $(A,C), (D,T)$ | 13 |
+| $\lbrace O, A, C, D\rbrace$ | $(O,B), (A,B), (C,T), (D,T)$ | 23 |
+| $\lbrace O, B, C, D\rbrace$ | $(O,A), (C,T), (D,T)$ | 24 |
+| $\lbrace O, A, B, C, D\rbrace$ | $(C,T), (D,T)$ | 14 |
 
-El menor valor es 12 y lo alcanza un solo corte, $S = \{O, A, B\}$: el mismo que encontró la
+El menor valor es 12 y lo alcanza un solo corte, $S = \lbrace O, A, B\rbrace$: el mismo que encontró la
 BFS. En esta red el corte mínimo es único.
 
 **Interpretación.** Aunque el origen puede despachar 15 paquetes por hora y el destino recibir
