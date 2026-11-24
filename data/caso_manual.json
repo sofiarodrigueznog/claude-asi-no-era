@@ -1,0 +1,15 @@
+{
+  "vertices": ["O", "A", "B", "C", "D", "T"],
+  "arcos": [
+    {"origen": "O", "destino": "A", "capacidad": 10, "activa": true},
+    {"origen": "O", "destino": "B", "capacidad": 5, "activa": true},
+    {"origen": "A", "destino": "B", "capacidad": 4, "activa": true},
+    {"origen": "A", "destino": "C", "capacidad": 5, "activa": true},
+    {"origen": "B", "destino": "D", "capacidad": 7, "activa": true},
+    {"origen": "C", "destino": "D", "capacidad": 3, "activa": true},
+    {"origen": "C", "destino": "T", "capacidad": 6, "activa": true},
+    {"origen": "D", "destino": "T", "capacidad": 8, "activa": true}
+  ],
+  "origen": "O",
+  "destino": "T"
+}
