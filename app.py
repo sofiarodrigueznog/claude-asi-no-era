@@ -144,6 +144,24 @@ def aplicar_accion(
     return copia, []
 
 
+def mostrar_aviso_de_la_red() -> None:
+    """
+    Entradas: ninguna (lee y borra `aviso_red` de `st.session_state`).
+    Resultado: ninguno; muestra el resultado del último cambio pedido a la red. Se
+    guarda antes de volver a dibujar la página para que los controles ya reflejen el
+    cambio y el mensaje quede a la vista, arriba de las modificaciones.
+    """
+    aviso = st.session_state.pop("aviso_red", None)
+    if aviso is None:
+        return
+    tipo, mensajes = aviso
+    for mensaje in mensajes:
+        if tipo == "exito":
+            st.success(mensaje)
+        else:
+            st.error(mensaje)
+
+
 def pasa_sobre_un_centro(origen: str, destino: str) -> bool:
     """
     Entradas: los extremos de una ruta.
@@ -314,6 +332,7 @@ def main() -> None:
             "Los cambios se aplican con los métodos de `Red` sobre una copia de la red "
             "en memoria. Después pulsa «Recalcular flujo»."
         )
+        mostrar_aviso_de_la_red()
         recalcular = st.button(
             "Recalcular flujo", key="btn_recalcular", disabled=not extremos_validos
         )
@@ -373,29 +392,29 @@ def main() -> None:
     for pulsado, accion, u, v, capacidad, mensaje in acciones:
         if pulsado:
             red, errores = aplicar_accion(red, accion, u, v, capacidad)
-            with st.sidebar:
-                if errores:
-                    for error in errores:
-                        st.error(error)
-                else:
-                    st.session_state["red"] = red
-                    st.session_state["version_red"] = version + 1
-                    st.session_state.pop("resultado", None)
-                    st.success(mensaje)
-            break
+            if errores:
+                st.session_state["aviso_red"] = ("error", errores)
+            else:
+                st.session_state["red"] = red
+                st.session_state["version_red"] = version + 1
+                st.session_state.pop("resultado", None)
+                st.session_state["aviso_red"] = ("exito", [mensaje])
+            # Se vuelve a dibujar para que los botones y selectores muestren la red nueva.
+            st.rerun()
 
     if restablecer:
         try:
             red_inicial = Red.cargar(ARCHIVO_RED)
         except (RedInvalidaError, OSError) as error:
-            st.error(f"No se pudo restablecer la red: {error}")
+            st.session_state["aviso_red"] = (
+                "error", [f"No se pudo restablecer la red: {error}"]
+            )
         else:
-            red = red_inicial
-            st.session_state["red"] = red
+            st.session_state["red"] = red_inicial
             st.session_state["version_red"] = version + 1
             st.session_state.pop("resultado", None)
-            with st.sidebar:
-                st.success("Red inicial restablecida.")
+            st.session_state["aviso_red"] = ("exito", ["Red inicial restablecida."])
+        st.rerun()
 
     # El resultado deja de ser válido si cambian los extremos o la red.
     clave = (origen, destino, st.session_state.get("version_red", 0))

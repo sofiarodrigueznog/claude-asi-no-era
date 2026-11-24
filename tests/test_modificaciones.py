@@ -168,3 +168,47 @@ def test_la_interfaz_puede_restablecer_la_red():
 
     assert not interfaz.error
     assert {m.label: m.value for m in interfaz.metric}["Flujo máximo"] == "25 paquetes/h"
+
+
+def test_los_botones_reflejan_el_cambio_al_instante():
+    from streamlit.testing.v1 import AppTest
+
+    interfaz = AppTest.from_file(str(RUTA_APP), default_timeout=30).run()
+    boton(interfaz, "Desactivar").click().run()
+
+    # Sin otro clic: la ruta ya figura inactiva en los controles.
+    assert boton(interfaz, "Desactivar").disabled
+    assert not boton(interfaz, "Reactivar").disabled
+
+    boton(interfaz, "Reactivar").click().run()
+    assert not interfaz.error
+    assert [s.value for s in interfaz.success] == ["Ruta reactivada."]
+    assert not boton(interfaz, "Desactivar").disabled
+
+
+def test_la_conexion_agregada_aparece_en_el_selector_de_rutas():
+    from streamlit.testing.v1 import AppTest
+
+    interfaz = AppTest.from_file(str(RUTA_APP), default_timeout=30).run()
+    control(interfaz, "selectbox", "Origen").set_value("O").run()
+    control(interfaz, "selectbox", "Destino").set_value("T").run()
+    boton(interfaz, "Agregar conexión").click().run()
+
+    assert "O → T" in control(interfaz, "selectbox", "Ruta").options
+
+    # Si estaba elegida y se restablece la red, el selector no se rompe.
+    control(interfaz, "selectbox", "Ruta").set_value("O → T").run()
+    boton(interfaz, "Restablecer red inicial").click().run()
+    assert not interfaz.exception
+    assert "O → T" not in control(interfaz, "selectbox", "Ruta").options
+
+
+def test_el_mensaje_se_muestra_una_sola_vez():
+    from streamlit.testing.v1 import AppTest
+
+    interfaz = AppTest.from_file(str(RUTA_APP), default_timeout=30).run()
+    boton(interfaz, "Desactivar").click().run()
+    assert [s.value for s in interfaz.success] == ["Ruta desactivada."]
+
+    boton(interfaz, "Recalcular flujo").click().run()
+    assert not interfaz.success
