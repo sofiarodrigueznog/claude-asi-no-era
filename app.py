@@ -10,6 +10,10 @@ con los algoritmos reales:
 
 Además del valor del flujo, se muestra el flujo/capacidad de cada arco (en el dibujo
 y en una tabla), la partición S/T y los arcos del corte resaltados.
+
+Desde la barra lateral se puede modificar la red sin editar el código: desactivar o
+reactivar una ruta, cambiar su capacidad y agregar una conexión, usando siempre los
+métodos de `Red`. Los cambios quedan en la sesión y se descartan al restablecer.
 """
 
 from __future__ import annotations
@@ -89,6 +93,73 @@ def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
             "capacidad": capacidad_corte,
         },
     }
+
+
+def obtener_red() -> Red:
+    """
+    Entradas: ninguna (lee `st.session_state`).
+    Resultado: la red de la sesión; la primera vez carga `data/red_inicial.json`
+    y guarda también un contador de versión para detectar cambios.
+    """
+    if "red" not in st.session_state:
+        st.session_state["red"] = Red.cargar(ARCHIVO_RED)
+        st.session_state["version_red"] = 0
+    return st.session_state["red"]
+
+
+def dividir_ruta(etiqueta: str) -> tuple[str, str]:
+    """
+    Entradas: etiqueta «u → v» de un selector de rutas.
+    Resultado: el par de centros (u, v).
+    """
+    origen, destino = etiqueta.split(" → ")
+    return origen, destino
+
+
+def aplicar_accion(
+    red: Red, accion: str, origen: str, destino: str, capacidad: int = 0
+) -> tuple[Red, list[str]]:
+    """
+    Entradas: la red, una acción («desactivar», «activar», «capacidad» o «agregar»),
+    los centros de la ruta y la capacidad cuando la acción la necesita.
+    Resultado: (red_resultante, errores). Llama siempre a los métodos de `Red` sobre
+    una copia; si la validación falla, devuelve la red original y todos los mensajes
+    de `RedInvalidaError`, sin modificar nada.
+    """
+    copia = red.copia()
+    try:
+        if accion == "desactivar":
+            copia.desactivar_ruta(origen, destino)
+        elif accion == "activar":
+            copia.activar_ruta(origen, destino)
+        elif accion == "capacidad":
+            copia.cambiar_capacidad(origen, destino, capacidad)
+        elif accion == "agregar":
+            copia.agregar_conexion(origen, destino, capacidad)
+        else:
+            raise ValueError(f"Acción desconocida: {accion}")
+    except RedInvalidaError as error:
+        return red, list(error.errores)
+
+    return copia, []
+
+
+def mostrar_aviso_de_la_red() -> None:
+    """
+    Entradas: ninguna (lee y borra `aviso_red` de `st.session_state`).
+    Resultado: ninguno; muestra el resultado del último cambio pedido a la red. Se
+    guarda antes de volver a dibujar la página para que los controles ya reflejen el
+    cambio y el mensaje quede a la vista, arriba de las modificaciones.
+    """
+    aviso = st.session_state.pop("aviso_red", None)
+    if aviso is None:
+        return
+    tipo, mensajes = aviso
+    for mensaje in mensajes:
+        if tipo == "exito":
+            st.success(mensaje)
+        else:
+            st.error(mensaje)
 
 
 def pasa_sobre_un_centro(origen: str, destino: str) -> bool:
@@ -224,20 +295,22 @@ def html_del_grafo(grafo: Network) -> str:
 
 
 def main() -> None:
-    """Dibuja la interfaz: red, selectores de extremos, botón y resultado."""
+    """Dibuja la interfaz: red, modificaciones, cálculo y resultado."""
     st.set_page_config(page_title="Simulador de red de flujo", page_icon="📦", layout="wide")
     st.title("📦 Simulador de una red de distribución de paquetes")
     st.caption(
         "Red inicial: `data/red_inicial.json` · las flechas indican el sentido de cada ruta "
-        "y la etiqueta su capacidad en paquetes/h."
+        "y la etiqueta su capacidad en paquetes/h. Puedes modificarla desde la barra lateral."
     )
 
     try:
-        red = Red.cargar(ARCHIVO_RED)
+        red = obtener_red()
     except (RedInvalidaError, OSError) as error:
         st.error(f"No se pudo cargar la red inicial: {error}")
         st.stop()
         return
+
+    version = st.session_state.get("version_red", 0)
 
     with st.sidebar:
         st.header("Parámetros del envío")
@@ -254,19 +327,110 @@ def main() -> None:
             "Calcular flujo máximo", type="primary", disabled=not extremos_validos
         )
         st.markdown("---")
-        st.caption("Resultado calculado con Edmonds–Karp y corte mínimo reales.")
+        st.header("Modificaciones de la red")
+        st.caption(
+            "Los cambios se aplican con los métodos de `Red` sobre una copia de la red "
+            "en memoria. Después pulsa «Recalcular flujo»."
+        )
+        mostrar_aviso_de_la_red()
+        recalcular = st.button(
+            "Recalcular flujo", key="btn_recalcular", disabled=not extremos_validos
+        )
 
-    clave = (origen, destino)
+        st.subheader("Ruta existente")
+        etiquetas_rutas = [f"{a.origen} → {a.destino}" for a in red.arcos()]
+        ruta_elegida = st.selectbox("Ruta", etiquetas_rutas, key="ruta_modificable")
+        ruta_origen, ruta_destino = dividir_ruta(ruta_elegida)
+        ruta_activa = red.arco(ruta_origen, ruta_destino).activa
+        col_desactivar, col_reactivar = st.columns(2)
+        desactivar = col_desactivar.button(
+            "Desactivar", disabled=not ruta_activa, key="btn_desactivar"
+        )
+        reactivar = col_reactivar.button(
+            "Reactivar", disabled=ruta_activa, key="btn_reactivar"
+        )
+
+        nueva_capacidad = st.number_input(
+            "Nueva capacidad (1–12)",
+            min_value=1,
+            max_value=12,
+            value=red.arco(ruta_origen, ruta_destino).capacidad,
+            step=1,
+            key=f"nueva_capacidad_{version}_{ruta_elegida}",
+        )
+        cambiar_capacidad = st.button("Cambiar capacidad", key="btn_cambiar_capacidad")
+
+        st.subheader("Nueva conexión")
+        nuevo_origen = st.selectbox("Origen", red.vertices, key="nuevo_origen")
+        nuevo_destino = st.selectbox("Destino", red.vertices, key="nuevo_destino")
+        capacidad_nueva = st.number_input(
+            "Capacidad (1–12)", min_value=1, max_value=12, value=6, step=1, key="capacidad_nueva"
+        )
+        agregar = st.button("Agregar conexión", key="btn_agregar")
+        restablecer = st.button("Restablecer red inicial", key="btn_restablecer")
+
+    acciones = [
+        (desactivar, "desactivar", ruta_origen, ruta_destino, 0, "Ruta desactivada."),
+        (reactivar, "activar", ruta_origen, ruta_destino, 0, "Ruta reactivada."),
+        (
+            cambiar_capacidad,
+            "capacidad",
+            ruta_origen,
+            ruta_destino,
+            nueva_capacidad,
+            "Capacidad actualizada.",
+        ),
+        (
+            agregar,
+            "agregar",
+            nuevo_origen,
+            nuevo_destino,
+            capacidad_nueva,
+            "Conexión agregada.",
+        ),
+    ]
+    for pulsado, accion, u, v, capacidad, mensaje in acciones:
+        if pulsado:
+            red, errores = aplicar_accion(red, accion, u, v, capacidad)
+            if errores:
+                st.session_state["aviso_red"] = ("error", errores)
+            else:
+                st.session_state["red"] = red
+                st.session_state["version_red"] = version + 1
+                st.session_state.pop("resultado", None)
+                st.session_state["aviso_red"] = ("exito", [mensaje])
+            # Se vuelve a dibujar para que los botones y selectores muestren la red nueva.
+            st.rerun()
+
+    if restablecer:
+        try:
+            red_inicial = Red.cargar(ARCHIVO_RED)
+        except (RedInvalidaError, OSError) as error:
+            st.session_state["aviso_red"] = (
+                "error", [f"No se pudo restablecer la red: {error}"]
+            )
+        else:
+            st.session_state["red"] = red_inicial
+            st.session_state["version_red"] = version + 1
+            st.session_state.pop("resultado", None)
+            st.session_state["aviso_red"] = ("exito", ["Red inicial restablecida."])
+        st.rerun()
+
+    # El resultado deja de ser válido si cambian los extremos o la red.
+    clave = (origen, destino, st.session_state.get("version_red", 0))
     if st.session_state.get("_clave_resultado") != clave:
         st.session_state.pop("resultado", None)
         st.session_state["_clave_resultado"] = clave
 
-    if calcular and extremos_validos:
+    if (calcular or recalcular) and extremos_validos:
         try:
             st.session_state["resultado"] = calcular_resultado(red, origen, destino)
         except ValueError as error:
             st.error(f"No se pudo calcular el flujo: {error}")
     resultado = st.session_state.get("resultado")
+
+    if st.session_state.get("version_red", 0) and resultado is None:
+        st.info("La red cambió. Pulsa «Recalcular flujo» para actualizar el resultado.")
 
     if resultado is not None:
         col1, col2, col3, col4 = st.columns(4)
