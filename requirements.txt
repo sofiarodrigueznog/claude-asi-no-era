@@ -1,6 +1,7 @@
+# Versiones probadas con Python 3.12.
 # Solo interfaz y gráficos. El algoritmo de flujo máximo es código propio:
 # NO agregar networkx ni ninguna biblioteca que calcule flujo o cortes.
-streamlit>=1.56
-pyvis
-pandas
-pytest
+streamlit==1.67.0
+pyvis==0.3.2
+pandas==3.1.1
+pytest==9.2.0
