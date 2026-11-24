@@ -77,6 +77,28 @@ def test_corte_maximo_minimo_en_otra_red():
     assert all(u in lado_s and v in lado_t for u, v in arcos)
 
 
+def test_corte_de_la_figura_1_sale_del_grafo_residual():
+    # La Figura 1 tiene 8 cortes mínimos de 14; el del grafo residual es S = {O}.
+    red = red_figura_1()
+    _, flujo = edmonds_karp(red, "O", "T")
+
+    lado_s, lado_t, arcos, capacidad = corte_minimo(red, flujo, "O", "T")
+
+    assert lado_s == {"O"}
+    assert lado_t == {"A", "B", "C", "D", "T"}
+    assert arcos == [("O", "A"), ("O", "B")]
+    assert capacidad == 14
+
+
+def test_figura_1_rechaza_si_la_capacidad_no_coincide_con_el_flujo():
+    # Flujo válido de valor 5 por O→A→C→T: el corte que sale no vale 5.
+    red = red_figura_1()
+    flujo = {("O", "A"): 5, ("A", "C"): 5, ("C", "T"): 5}
+
+    with pytest.raises(ValueError, match="no coincide"):
+        corte_minimo(red, flujo, "O")
+
+
 def test_una_ruta_desactivada_no_puede_estar_en_el_corte():
     red = red_inicial()
     red.desactivar_ruta("D", "H")

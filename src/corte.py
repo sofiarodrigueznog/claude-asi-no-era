@@ -20,6 +20,7 @@ from __future__ import annotations
 from collections import deque
 
 from src.red import Red
+from src.verificacion import calcular_valor_flujo
 
 Flujo = dict[tuple[str, str], int]
 GrafoResidual = dict[str, dict[str, int]]
@@ -107,4 +108,20 @@ def corte_minimo(
     ]
     capacidad = sum(red.capacidad(u, v) for u, v in arcos)
 
+    comprobar_capacidad_igual_al_flujo(capacidad, flujo, s)
+
     return lado_s, lado_t, arcos, capacidad
+
+
+def comprobar_capacidad_igual_al_flujo(capacidad: int, flujo: Flujo, s: str) -> None:
+    """
+    Entradas: la capacidad del corte, el flujo por arco y el origen s.
+    Resultado: ninguno; lanza ValueError si la capacidad del corte no coincide con el
+    valor del flujo, porque en ese caso el flujo no es máximo.
+    """
+    valor_flujo = calcular_valor_flujo(flujo, s)
+    if capacidad != valor_flujo:
+        raise ValueError(
+            f"La capacidad del corte ({capacidad}) no coincide con el valor del flujo "
+            f"({valor_flujo}): el flujo no es máximo."
+        )
