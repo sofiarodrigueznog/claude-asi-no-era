@@ -96,7 +96,7 @@ devuelve flujo. Sumando lo enviado por cada camino se obtiene el flujo de cada r
 | $x(u, v)$ | 7 | 5 | 2 | 5 | 7 | 0 | 5 | 7 |
 | $c(u, v)$ | 10 | 5 | 4 | 5 | 7 | 3 | 6 | 8 |
 
-![Figura 5.2. Flujo máximo y corte mínimo de la red de comprobación. Cada etiqueta indica x(u, v) / c(u, v)\enspace  en rojo, los arcos del corte.](figuras/caso_manual_flujo.png)
+![Figura 5.2. Flujo máximo y corte mínimo de la red de comprobación. Cada etiqueta indica x(u, v) / c(u, v); en rojo, los arcos del corte.](figuras/caso_manual_flujo.png)
 
 **Capacidad.** En todos los arcos se cumple $0 \le x(u,v) \le c(u,v)$. Los arcos saturados
 son $(O,B)$, $(A,C)$ y $(B,D)$.
@@ -146,8 +146,8 @@ vértices de $S'$ se cancela, y queda
 
 $$
 |y| = \sum_{\substack{(u,v) \in E \\ u \in S',\ v \notin S'}} y(u,v)
-    \\enspace -\\enspace  \sum_{\substack{(u,v) \in E \\ u \notin S',\ v \in S'}} y(u,v)
-    \\enspace \le\\enspace  \sum_{\substack{(u,v) \in E \\ u \in S',\ v \notin S'}} c(u,v) = c(S', V \setminus S').
+    \enspace - \enspace \sum_{\substack{(u,v) \in E \\ u \notin S',\ v \in S'}} y(u,v)
+    \enspace \le \enspace \sum_{\substack{(u,v) \in E \\ u \in S',\ v \notin S'}} c(u,v) = c(S', V \setminus S').
 $$
 
 La desigualdad usa $y(u,v) \le c(u,v)$ en los arcos que salen de $S'$ y $y(u,v) \ge 0$ en los
