@@ -14,7 +14,7 @@ al iniciar.
 Cada vértice representa un centro logístico:
 
 $$
-V = \{O,\ A,\ B,\ C,\ D,\ E,\ F,\ G,\ H,\ I,\ T\}, \qquad |V| = 11.
+V = \lbrace O,\ A,\ B,\ C,\ D,\ E,\ F,\ G,\ H,\ I,\ T\rbrace, \qquad |V| = 11.
 $$
 
 Se cumple el intervalo exigido para la configuración inicial: $10 \le |V| = 11 \le 12$.
@@ -25,11 +25,11 @@ Cada arco $(u, v) \in E$ representa una ruta de transporte que lleva paquetes **
 $u$ **hacia** el centro $v$. El arco no autoriza el traslado en sentido contrario.
 
 $$
-\begin{aligned}
-E = \{\ & (O,A),\ (O,B),\ (O,C),\ (A,D),\ (A,E),\ (B,D),\ (B,F),\ (C,F),\ (C,G), \\
-        & (D,H),\ (D,E),\ (E,H),\ (E,I),\ (F,I),\ (G,I),\ (G,T),\ (H,T),\ (I,T)\ \}
-\end{aligned}
-\qquad |E| = 18.
+E = \lbrace (O,A),\ (O,B),\ (O,C),\ (A,D),\ (A,E),\ (B,D),\ (B,F),\ (C,F),\ (C,G),
+$$
+
+$$
+(D,H),\ (D,E),\ (E,H),\ (E,I),\ (F,I),\ (G,I),\ (G,T),\ (H,T),\ (I,T)\rbrace, \qquad |E| = 18.
 $$
 
 Se cumple el intervalo exigido: $15 \le |E| = 18 \le 20$.
@@ -38,7 +38,7 @@ Se cumple el intervalo exigido: $15 \le |E| = 18 \le 20$.
 
 ## 1.3 Función de capacidad
 
-La función $c : E \to \{1, 2, \dots, 12\}$ asigna a cada ruta su capacidad máxima de traslado, en
+La función $c : E \to \lbrace 1, 2, \dots, 12\rbrace$ asigna a cada ruta su capacidad máxima de traslado, en
 paquetes por hora.
 
 | N° | Arco $(u, v)$ | $c(u, v)$ | Tramo de la red |
@@ -62,7 +62,7 @@ paquetes por hora.
 | 17 | $(H, T)$ | 12 | Consolidación → destino |
 | 18 | $(I, T)$ | 12 | Consolidación → destino |
 
-Todas las capacidades son enteras y están entre 2 y 12, dentro del rango $\{1, \dots, 12\}$. La
+Todas las capacidades son enteras y están entre 2 y 12, dentro del rango $\lbrace 1, \dots, 12\rbrace$. La
 suma de todas ellas es $\sum_{e \in E} c(e) = 118$.
 
 ## 1.4 Significado de los elementos del modelo
@@ -127,7 +127,7 @@ La red inicial y cualquier modificación hecha desde la aplicación deben cumpli
 | Sin arcos repetidos | cada par ordenado $(u, v)$ aparece a lo más una vez | Los 18 pares de $E$ son distintos. |
 | Sin arcos recíprocos | $(u, v) \in E \Rightarrow (v, u) \notin E$ | Para ningún arco de $E$ está también el arco inverso. |
 | Ningún vértice aislado | $d^-(v) + d^+(v) \ge 1$ para todo $v \in V$ | El menor grado total es 3 (tabla siguiente). |
-| Capacidades válidas | $c(u, v) \in \{1, \dots, 12\}$ | Mínimo 2, máximo 12. |
+| Capacidades válidas | $c(u, v) \in \lbrace 1, \dots, 12\rbrace$ | Mínimo 2, máximo 12. |
 | Origen y destino | $s \ne t$, con al menos dos caminos dirigidos $s \to t$ | $s = O$, $t = T$, 12 caminos. |
 
 En la tabla, $d^-(v)$ es el número de arcos que llegan a $v$ (grado de entrada) y $d^+(v)$ el
