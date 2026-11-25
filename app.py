@@ -14,6 +14,10 @@ y en una tabla), la partición S/T y los arcos del corte resaltados.
 Desde la barra lateral se puede modificar la red sin editar el código: desactivar o
 reactivar una ruta, cambiar su capacidad y agregar una conexión, usando siempre los
 métodos de `Red`. Los cambios quedan en la sesión y se descartan al restablecer.
+
+También se puede elegir entre tres configuraciones guardadas en `data/` —la red
+inicial y dos modificaciones— y compararlas en una tabla con su flujo máximo y su
+corte mínimo (S, T y arcos), calculados con los mismos extremos.
 """
 
 from __future__ import annotations
@@ -31,6 +35,14 @@ from src.red import Red, RedInvalidaError
 
 BASE_DIR = Path(__file__).resolve().parent
 ARCHIVO_RED = BASE_DIR / "data" / "red_inicial.json"
+CONFIGURACION_INICIAL = "Red inicial"
+
+# Las tres configuraciones que se pueden elegir y comparar en la interfaz.
+CONFIGURACIONES: dict[str, Path] = {
+    CONFIGURACION_INICIAL: ARCHIVO_RED,
+    "Modificación 1 (sin O → A)": BASE_DIR / "data" / "modificacion_1.json",
+    "Modificación 2 (O → T, cap. 6)": BASE_DIR / "data" / "modificacion_2.json",
+}
 
 COLOR_ORIGEN = "#2e7d32"
 COLOR_DESTINO = "#c62828"
@@ -95,16 +107,49 @@ def calcular_resultado(red: Red, origen: str, destino: str) -> dict[str, Any]:
     }
 
 
+def cargar_configuracion(nombre: str) -> Red:
+    """
+    Entradas: nombre de una de las claves de `CONFIGURACIONES`.
+    Resultado: la red leída desde su archivo JSON, validada por `Red.cargar`.
+    """
+    return Red.cargar(CONFIGURACIONES[nombre])
+
+
 def obtener_red() -> Red:
     """
     Entradas: ninguna (lee `st.session_state`).
-    Resultado: la red de la sesión; la primera vez carga `data/red_inicial.json`
+    Resultado: la red de la sesión; la primera vez carga la configuración inicial
     y guarda también un contador de versión para detectar cambios.
     """
     if "red" not in st.session_state:
-        st.session_state["red"] = Red.cargar(ARCHIVO_RED)
+        configuracion = st.session_state.get("configuracion", CONFIGURACION_INICIAL)
+        st.session_state["red"] = cargar_configuracion(configuracion)
         st.session_state["version_red"] = 0
+        st.session_state["_config_cargada"] = configuracion
     return st.session_state["red"]
+
+
+def calcular_comparacion(origen: str, destino: str) -> list[dict[str, Any]]:
+    """
+    Entradas: los centros origen y destino elegidos en la interfaz.
+    Resultado: una fila por configuración con el flujo máximo y el corte mínimo
+    (capacidad, S, T y arcos), calculados todos con los mismos extremos.
+    """
+    filas: list[dict[str, Any]] = []
+    for nombre in CONFIGURACIONES:
+        resultado = calcular_resultado(cargar_configuracion(nombre), origen, destino)
+        corte = resultado["corte_minimo"]
+        filas.append(
+            {
+                "Configuración": nombre,
+                "Flujo máximo": resultado["flujo_maximo"],
+                "Capacidad del corte": corte["capacidad"],
+                "S": ", ".join(sorted(corte["S"])),
+                "T": ", ".join(sorted(corte["T"])),
+                "Arcos del corte": ", ".join(f"{u} → {v}" for u, v in corte["arcos"]),
+            }
+        )
+    return filas
 
 
 def dividir_ruta(etiqueta: str) -> tuple[str, str]:
@@ -297,6 +342,10 @@ def html_del_grafo(grafo: Network) -> str:
 def main() -> None:
     """Dibuja la interfaz: red, modificaciones, cálculo y resultado."""
     st.set_page_config(page_title="Simulador de red de flujo", page_icon="📦", layout="wide")
+    # El selector de configuración ya está creado cuando se pulsa «Restablecer»;
+    # su clave solo se puede cambiar antes de volver a dibujar el widget.
+    if st.session_state.pop("_restablecer_configuracion", False):
+        st.session_state["configuracion"] = CONFIGURACION_INICIAL
     st.title("📦 Simulador de una red de distribución de paquetes")
     st.caption(
         "Red inicial: `data/red_inicial.json` · las flechas indican el sentido de cada ruta "
@@ -311,6 +360,30 @@ def main() -> None:
         return
 
     version = st.session_state.get("version_red", 0)
+
+    with st.sidebar:
+        st.header("Configuración de la red")
+        configuracion = st.selectbox(
+            "Configuración", list(CONFIGURACIONES), key="configuracion"
+        )
+        st.caption("Elige una configuración o compara las tres al final de la página.")
+
+    # Cambiar de configuración recarga su JSON y descarta cualquier cambio local.
+    if configuracion != st.session_state.get("_config_cargada"):
+        try:
+            red_configuracion = cargar_configuracion(configuracion)
+        except (RedInvalidaError, OSError) as error:
+            st.error(f"No se pudo cargar la configuración «{configuracion}»: {error}")
+        else:
+            st.session_state["red"] = red_configuracion
+            st.session_state["version_red"] = version + 1
+            st.session_state.pop("resultado", None)
+            st.session_state["_config_cargada"] = configuracion
+            st.session_state["aviso_red"] = (
+                "exito",
+                [f"Configuración «{configuracion}» cargada."],
+            )
+            st.rerun()
 
     with st.sidebar:
         st.header("Parámetros del envío")
@@ -413,6 +486,8 @@ def main() -> None:
             st.session_state["red"] = red_inicial
             st.session_state["version_red"] = version + 1
             st.session_state.pop("resultado", None)
+            st.session_state["_restablecer_configuracion"] = True
+            st.session_state["_config_cargada"] = CONFIGURACION_INICIAL
             st.session_state["aviso_red"] = ("exito", ["Red inicial restablecida."])
         st.rerun()
 
@@ -485,6 +560,19 @@ def main() -> None:
                 f"**Corte mínimo:** {corte['capacidad']} paquetes/h · "
                 f"rutas: {rutas_corte}"
             )
+
+    if extremos_validos:
+        st.subheader("Comparación de configuraciones")
+        st.caption(
+            "Mismo origen y destino para las tres configuraciones: red inicial y dos "
+            "modificaciones guardadas en `data/`."
+        )
+        try:
+            comparacion = calcular_comparacion(origen, destino)
+        except (ValueError, OSError) as error:
+            st.error(f"No se pudo comparar las configuraciones: {error}")
+        else:
+            st.dataframe(comparacion, width="stretch", hide_index=True)
 
 
 if __name__ == "__main__":
