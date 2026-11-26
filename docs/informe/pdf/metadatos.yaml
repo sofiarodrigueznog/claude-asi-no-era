@@ -1,0 +1,67 @@
+title-meta: "Simulador de una red de distribución de paquetes"
+author-meta: "Sofía Rodríguez, Paulo Villalobos, David Villegas"
+subject: "Teoría de Grafos INFO1158: Proyecto práctico final"
+lang: es
+documentclass: article
+classoption:
+  - 11pt
+  - a4paper
+geometry:
+  - margin=2.5cm
+toc: true
+toc-depth: 2
+toc-title: "Índice"
+colorlinks: true
+linkcolor: black
+urlcolor: blue
+header-includes:
+  - |
+    ```{=latex}
+    \linespread{1.1}
+    \setlength{\parskip}{0.5em}
+    \setlength{\parindent}{0pt}
+    \usepackage{fancyhdr}
+    \pagestyle{fancy}
+    \fancyhf{}
+    \fancyhead[L]{\small Simulador de una red de distribución de paquetes}
+    \fancyhead[R]{\small INFO1158}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0.4pt}
+    \setlength{\headheight}{14pt}
+    \usepackage{graphicx}
+    \usepackage{float}
+    \floatplacement{figure}{H}
+    % Los pies de figura ya traen su número («Figura 4.1.»): LaTeX no agrega otro.
+    \makeatletter
+    % Salta de página si no queda el espacio pedido (para no cortar un bloque de código).
+    \newcommand{\necesitoespacio}[1]{\par\penalty-100\begingroup
+      \dimen@=#1\relax\dimen@ii=\pagegoal\advance\dimen@ii-\pagetotal
+      \ifdim\dimen@>\dimen@ii\ifdim\dimen@ii>\z@\vfil\fi\break\fi\endgroup}
+    \long\def\@makecaption#1#2{\vskip\abovecaptionskip{\centering\small #2\par}\vskip\belowcaptionskip}
+    \makeatother
+    ```
+include-before:
+  - |
+    ```{=latex}
+    \begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\large Teoría de Grafos -- INFO1158\par}
+    \vspace{0.3cm}
+    {\large Proyecto práctico final\par}
+    \vspace{2.5cm}
+    {\LARGE\bfseries Simulador de una red de distribución de paquetes\par}
+    \vspace{0.6cm}
+    {\large Flujo máximo y corte mínimo con Edmonds--Karp\par}
+    \vspace{2.5cm}
+    {\large\bfseries Integrantes\par}
+    \vspace{0.3cm}
+    {\large Sofía Rodríguez\par Paulo Villalobos\par David Villegas\par}
+    \vfill
+    {\large Repositorio del código fuente:\par}
+    \vspace{0.2cm}
+    {\url{https://github.com/sofiarodrigueznog/claude-asi-no-era}\par}
+    \vspace{1.5cm}
+    {\large 26 de noviembre de 2026\par}
+    \end{titlepage}
+    ```
