@@ -30,7 +30,7 @@ página, calcula las tres filas con los mismos extremos elegidos.
 
 ## 4.2 Resultados
 
-| Configuración | Flujo máximo $\|x\|$ | Capacidad del corte $c(S, V\setminus S)$ | $S$ | $V\setminus S$ | Arcos del corte |
+| Configuración | Flujo máximo $\lvert x\rvert$ | Capacidad del corte $c(S, V\setminus S)$ | $S$ | $V\setminus S$ | Arcos del corte |
 |:---|:---:|:---:|:---|:---|:---|
 | Red inicial | 25 | 25 | $\lbrace O, A, B, C, D, E, F\rbrace$ | $\lbrace G, H, I, T\rbrace$ | $(C,G)$, $(D,H)$, $(E,H)$, $(E,I)$, $(F,I)$ |
 | Modificación 1 | 16 | 16 | $\lbrace O, B, C, F\rbrace$ | $\lbrace A, D, E, G, H, I, T\rbrace$ | $(B,D)$, $(C,G)$, $(F,I)$ |
@@ -69,7 +69,7 @@ Al desactivar $(O,A)$ desaparecen 12 de capacidad de salida: desde $O$ solo qued
 y $(O,C)$, de 9. El flujo máximo baja de 25 a **16 paquetes por hora**, es decir 9 menos, no 12.
 La razón es que en el flujo calculado para la red inicial $(O,A)$ transportaba 11 paquetes por
 hora, no su capacidad completa, y parte de ese flujo se redirige por $(O,B)$, que pasa de 8 a 10.
-Quitar una ruta no resta necesariamente su capacidad del flujo: resta lo que aportaba al corte.
+Quitar una ruta no resta necesariamente su capacidad del flujo; el nuevo valor lo fija el nuevo corte mínimo.
 
 La partición también cambia:
 
@@ -90,7 +90,7 @@ $(O,B)$ también queda saturado con $10/10$, pero no está en el corte porque $B
 Este caso muestra que el corte mínimo **no es fijo**: depende de qué rutas siguen disponibles, y
 que al eliminar una ruta puede aparecer un cuello de botella distinto del original.
 
-![Figura 4.3. Interfaz con la Modificación 1: sin la ruta $O \to A$, el flujo y el corte bajan a 16 y la partición $S$ / $V\setminus S$ es diferente.](figuras/modificacion_1.png)
+![Figura 4.3. Interfaz con la Modificación 1: sin la ruta O → A, el flujo y el corte bajan a 16 y la partición del corte es diferente.](figuras/modificacion_1.png)
 
 ## 4.5 Modificación 2: conexión directa $O \to T$
 
@@ -111,17 +111,17 @@ Si la conexión se hubiera agregado entre dos centros del mismo lado, el flujo n
 (sección 3.2). Con la modificación, desde $O$ podrían salir hasta 37 paquetes por hora y a $T$
 podrían llegar hasta 35, pero el corte de 31 sigue siendo el límite que determina el resultado.
 
-![Figura 4.4. Interfaz con la Modificación 2: la nueva ruta $O \to T$ se satura y el flujo y el corte suben a 31 paquetes por hora.](figuras/modificacion_2.png)
+![Figura 4.4. Interfaz con la Modificación 2: la nueva ruta O → T se satura y el flujo y el corte suben a 31 paquetes por hora.](figuras/modificacion_2.png)
 
 ## 4.6 Comprobación del teorema en las tres configuraciones
 
-| Configuración | $\\|x\\|$ | $c(S, V\setminus S)$ | Arcos del corte saturados |
+| Configuración | $\lvert x\rvert$ | $c(S, V\setminus S)$ | Arcos del corte saturados |
 |:---|:---:|:---:|:---:|
 | Red inicial | 25 | 25 | 5 de 5 |
 | Modificación 1 | 16 | 16 | 3 de 3 |
 | Modificación 2 | 31 | 31 | 6 de 6 |
 
-En las tres configuraciones se cumple $\max \\lvert x\\rvert = \min c(S, V\setminus S)$, como
+En las tres configuraciones se cumple $\max \lvert x\rvert = \min c(S, V\setminus S)$, como
 asegura el teorema de la sección 3.2. `src/corte.py` comprueba esa igualdad antes de mostrar un
 corte y lanza un error si el flujo recibido no fuera máximo. Los valores de esta tabla también
 están fijados en `tests/test_configuraciones.py`, que verifica que los tres archivos JSON sean
