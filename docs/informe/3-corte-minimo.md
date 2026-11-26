@@ -8,7 +8,7 @@ Edmonds–Karp.
 
 ## 3.1 Partición y capacidad de un corte
 
-Un **corte** $s$-$t$ es una partición del conjunto de vértices en dos partes:
+Un **corte** $s\text{-}t$ es una partición del conjunto de vértices en dos partes:
 
 $$
 V = S \cup (V \setminus S), \qquad S \cap (V \setminus S) = \varnothing, \qquad s \in S, \quad t \in V \setminus S.
@@ -21,14 +21,14 @@ La **capacidad del corte** es la suma de las capacidades de los arcos que van de
 $V \setminus S$:
 
 $$
-c(S, V \setminus S) = \sum_{\substack{(u, v) \in E \\ u \in S,\ v \notin S}} c(u, v).
+c(S, V \setminus S) = \sum_{(u, v) \in E,\ u \in S,\ v \notin S} c(u, v).
 $$
 
 Los arcos que van en sentido contrario, de $V \setminus S$ hacia $S$, no se suman. Si se eliminan
 de la red todos los arcos de $S$ hacia $V \setminus S$, no queda ningún camino dirigido de $s$ a
 $t$. Por eso todo paquete que llega al destino tiene que cruzar alguno de ellos.
 
-Un **corte mínimo** es un corte $s$-$t$ de capacidad mínima entre todos los posibles. Puede haber
+Un **corte mínimo** es un corte $s\text{-}t$ de capacidad mínima entre todos los posibles. Puede haber
 más de uno con la misma capacidad.
 
 ## 3.2 Teorema de flujo máximo–corte mínimo
@@ -38,10 +38,10 @@ más de uno con la misma capacidad.
 >
 > 1. $x$ es un flujo máximo.
 > 2. El grafo residual $G_f$ no contiene caminos aumentantes de $s$ a $t$.
-> 3. $|x| = c(S, V \setminus S)$ para algún corte $s$-$t$.
+> 3. $|x| = c(S, V \setminus S)$ para algún corte $s\text{-}t$.
 
 La parte fácil del teorema es que **ningún flujo supera la capacidad de ningún corte**: para todo
-flujo factible $x$ y todo corte $s$-$t$ se cumple $|x| \le c(S, V \setminus S)$ (Cormen et al.,
+flujo factible $x$ y todo corte $s\text{-}t$ se cumple $|x| \le c(S, V \setminus S)$ (Cormen et al.,
 2009, corolario 26.5). La razón es que todo el flujo neto que sale de $s$ tiene que cruzar el corte,
 y en cada arco que lo cruza no puede pasar más que su capacidad. La demostración completa de esta
 desigualdad está en la sección 5.5.
@@ -62,7 +62,7 @@ cambia el resultado.
 ## 3.3 Cómo el código obtiene el corte
 
 La demostración del teorema es constructiva: cuando Edmonds–Karp termina, el grafo residual entrega
-directamente un corte mínimo. La función `corte_minimo(red, flujo, s)` de `src/corte.py` sigue esos
+directamente un corte mínimo. La función `corte_minimo(red, flujo, s, t)` de `src/corte.py` sigue esos
 pasos:
 
 1. **Construir el grafo residual del flujo final.** Para cada ruta activa $(u, v)$ se agrega el
@@ -75,11 +75,12 @@ pasos:
    rutas desactivadas en la simulación tienen capacidad 0, así que no forman parte del corte.
 4. **Calcular la capacidad** sumando $c(u, v)$ sobre esos arcos.
 5. **Comprobar el teorema.** La función compara la capacidad del corte con el valor del flujo
-   (lo que sale de $s$ menos lo que entra a $s$). Si no coinciden, el flujo recibido no era máximo y
-   la función lanza un error en vez de mostrar un corte incorrecto.
+   (lo que sale de $s$ menos lo que entra a $s$) y revisa que $t$ no haya quedado en $S$. Si algo
+   falla, el flujo recibido no era máximo y la función lanza un error en vez de mostrar un corte
+   incorrecto.
 
 ¿Por qué el conjunto alcanzable define un corte mínimo? Como el flujo es máximo, $t$ no es
-alcanzable, de modo que $t \notin S$ y la partición es un corte $s$-$t$. Además, todo arco original
+alcanzable, de modo que $t \notin S$ y la partición es un corte $s\text{-}t$. Además, todo arco original
 de $S$ hacia $V \setminus S$ está saturado, porque si le quedara capacidad residual su extremo final
 también sería alcanzable. Por la misma razón, todo arco de $V \setminus S$ hacia $S$ lleva flujo 0,
 porque si no, su arco inverso permitiría llegar a su vértice inicial. Entonces el flujo neto que
@@ -120,9 +121,9 @@ $V \setminus S$ hacia $S$, así que no hay flujo que vuelva a cruzar el corte.
 
 El resultado muestra dónde está la restricción. Desde el origen podrían salir hasta
 $12 + 10 + 9 = 31$ paquetes por hora y al destino podrían llegar hasta $5 + 12 + 12 = 29$, pero
-ninguno de esos dos límites es el que manda. El cuello de botella está en el paso de los centros de
-clasificación y transferencia ($A$ a $F$) hacia los de consolidación ($G$, $H$ e $I$). En esta red
-además es el único corte mínimo, así que para que transporte más de 25 paquetes por hora basta con
+ninguno de esos dos límites es el que manda. El cuello de botella está en las rutas que van de los
+centros de transferencia $D$, $E$ y $F$ a los de consolidación $H$ e $I$, junto con la ruta
+$C \to G$ que abastece al centro de transferencia $G$. En esta red además es el único corte mínimo, así que para que transporte más de 25 paquetes por hora basta con
 ampliar alguna de esas cinco rutas o agregar una conexión nueva de $S$ hacia $V \setminus S$.
 
 ## Referencias
