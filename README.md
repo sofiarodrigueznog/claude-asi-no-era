@@ -106,7 +106,7 @@ data/
   red_inicial.json      red principal (11 centros, 18 rutas)
   caso_manual.json      red pequeña del caso de comprobación manual
 tests/                  pruebas automáticas (pytest), una por módulo y para la interfaz
-docs/informe/           secciones del informe técnico en Markdown y sus figuras
+docs/informe/           secciones del informe técnico en Markdown, sus figuras e informe.pdf
 requirements.txt        dependencias con las versiones probadas
 ```
 
@@ -128,6 +128,15 @@ Formato de una red en JSON:
   "origen": "O",
   "destino": "T"
 }
+```
+
+## Informe en PDF
+
+`docs/informe/informe.pdf` reúne todas las secciones. Para volver a generarlo después de cambiar
+una sección se necesitan pandoc 3 y una distribución de LaTeX con xelatex (por ejemplo TinyTeX):
+
+```bash
+python docs/informe/pdf/compilar.py
 ```
 
 ## Condiciones del enunciado

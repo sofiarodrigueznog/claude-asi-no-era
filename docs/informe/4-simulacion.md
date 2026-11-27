@@ -95,7 +95,7 @@ que al eliminar una ruta puede aparecer un cuello de botella distinto del origin
 ## 4.5 Modificación 2: conexión directa $O \to T$
 
 Aquí se agrega $(O,T)$ con capacidad 6, sin tocar las 18 rutas originales. El flujo máximo sube de
-25 a **31 paquetes por hora**. El motivo es geométricamente simple: $O$ está en $S$ y $T$ en
+25 a **31 paquetes por hora**. El motivo es directo: $O$ está en $S$ y $T$ en
 $V\setminus S$, así que el nuevo arco cruza exactamente la misma partición que el corte inicial.
 Los cinco arcos anteriores siguen transportando lo mismo y el nuevo arco lleva $6/6$:
 
