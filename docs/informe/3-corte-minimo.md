@@ -14,8 +14,8 @@ $$
 V = S \cup (V \setminus S), \qquad S \cap (V \setminus S) = \varnothing, \qquad s \in S, \quad t \in V \setminus S.
 $$
 
-$S$ es el lado del origen y $V \setminus S$ el lado del destino. Como en la sección 5, se escribe
-$V \setminus S$ en lugar de $T$ para no confundir este conjunto con el vértice $T$.
+$S$ es el lado del origen y $V \setminus S$ el lado del destino. Se escribe $V \setminus S$
+en lugar de $T$ para no confundir este conjunto con el vértice $T$.
 
 La **capacidad del corte** es la suma de las capacidades de los arcos que van de $S$ hacia
 $V \setminus S$:
@@ -40,13 +40,13 @@ más de uno con la misma capacidad.
 > 2. El grafo residual $G_f$ no contiene caminos aumentantes de $s$ a $t$.
 > 3. $|x| = c(S, V \setminus S)$ para algún corte $s\text{-}t$.
 
-La parte fácil del teorema es que **ningún flujo supera la capacidad de ningún corte**: para todo
+La primera parte del teorema es que **ningún flujo supera la capacidad de ningún corte**: para todo
 flujo factible $x$ y todo corte $s\text{-}t$ se cumple $|x| \le c(S, V \setminus S)$ (Cormen et al.,
 2009, corolario 26.5). La razón es que todo el flujo neto que sale de $s$ tiene que cruzar el corte,
 y en cada arco que lo cruza no puede pasar más que su capacidad. La demostración completa de esta
 desigualdad está en la sección 5.5.
 
-La parte importante es que la igualdad siempre se alcanza: el valor del flujo máximo es igual a la
+La segunda parte es que la igualdad siempre se alcanza: el valor del flujo máximo es igual a la
 capacidad del corte mínimo,
 
 $$
@@ -83,7 +83,7 @@ pasos:
 alcanzable, de modo que $t \notin S$ y la partición es un corte $s\text{-}t$. Además, todo arco original
 de $S$ hacia $V \setminus S$ está saturado, porque si le quedara capacidad residual su extremo final
 también sería alcanzable. Por la misma razón, todo arco de $V \setminus S$ hacia $S$ lleva flujo 0,
-porque si no, su arco inverso permitiría llegar a su vértice inicial. Entonces el flujo neto que
+porque de lo contrario, su arco inverso permitiría llegar a su vértice inicial. Entonces el flujo neto que
 cruza el corte es exactamente su capacidad, y por la desigualdad de la sección 3.2 ese corte es
 mínimo.
 
@@ -121,9 +121,10 @@ $V \setminus S$ hacia $S$, así que no hay flujo que vuelva a cruzar el corte.
 
 El resultado muestra dónde está la restricción. Desde el origen podrían salir hasta
 $12 + 10 + 9 = 31$ paquetes por hora y al destino podrían llegar hasta $5 + 12 + 12 = 29$, pero
-ninguno de esos dos límites es el que manda. El cuello de botella está en las rutas que van de los
+ninguno de esos dos límites es el que limita el resultado. El cuello de botella está en las rutas que van de los
 centros de transferencia $D$, $E$ y $F$ a los de consolidación $H$ e $I$, junto con la ruta
-$C \to G$ que abastece al centro de transferencia $G$. En esta red además es el único corte mínimo, así que para que transporte más de 25 paquetes por hora basta con
+$C \to G$ que abastece al centro de transferencia $G$. En esta red además es el único
+corte mínimo, así que para que la red transporte más de 25 paquetes por hora basta con
 ampliar alguna de esas cinco rutas o agregar una conexión nueva de $S$ hacia $V \setminus S$.
 
 ## Referencias

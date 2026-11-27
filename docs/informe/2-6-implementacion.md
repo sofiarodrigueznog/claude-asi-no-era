@@ -34,7 +34,7 @@ Cada paso de la sección 2.3 corresponde a una función de `src/flujo.py`:
 
 | Paso | Función |
 |:---|:---|
-| Buscar con BFS el camino de aumento con menos arcos | `buscar_camino_bfs` y `reconstruir_camino` |
+| Buscar con BFS el camino aumentante con menos arcos | `buscar_camino_bfs` y `reconstruir_camino` |
 | Calcular el cuello de botella $c_f(P)$ | `calcular_cuello_de_botella` |
 | Enviar $c_f(P)$: restar en cada arco del camino y sumar en su inverso | `aumentar_flujo` |
 | Leer el flujo final $x(u, v)$ de cada ruta | `extraer_flujo` |

@@ -152,7 +152,7 @@ Se elige **Edmonds–Karp** por las siguientes razones:
    capacidades). Con Edmonds–Karp el número de iteraciones depende solo del tamaño del grafo, así que
    un cambio en las capacidades no puede disparar el tiempo de ejecución.
 2. **Terminación garantizada.** No depende de que las capacidades sean enteras. Aunque en este
-   proyecto lo son, el algoritmo queda correcto incluso si esa condición cambiara.
+   proyecto lo son, el algoritmo seguiría siendo correcto si esa condición cambiara.
 3. **Caminos fáciles de seguir.** En cada iteración BFS entrega un camino aumentante con la menor
    cantidad de arcos, lo que facilita mostrar el paso a paso en el informe y comparar los resultados
    con cálculos a mano. Si hay varios con esa cantidad, el elegido depende del orden en que se
