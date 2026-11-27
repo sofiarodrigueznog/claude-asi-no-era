@@ -52,7 +52,7 @@ $$
 c_f(P_1) = \min\lbrace 10,\ 5,\ 6\rbrace = 5.
 $$
 
-Quedan $c_f(O,A) = 5$, $c_f(A,C) = 0$ y $c_f(C,T) = 1$, y aparecen los retrocesos
+Quedan $c_f(O,A) = 5$, $c_f(A,C) = 0$ y $c_f(C,T) = 1$, y aparecen los arcos inversos
 $c_f(A,O) = c_f(C,A) = c_f(T,C) = 5$.
 
 **Iteración 2.** Como $(A,C)$ ya no tiene residual, la BFS llega a $T$ por
