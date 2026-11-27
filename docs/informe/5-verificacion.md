@@ -39,7 +39,7 @@ flujo máximo: la restricción está en el medio de la red.
 ## 5.2 Resolución manual con Edmonds–Karp
 
 Se parte del flujo cero, de modo que la capacidad residual de cada arco es su capacidad y los
-arcos de retroceso valen 0. En cada iteración se busca con BFS, desde $O$, el camino de aumento
+arcos inversos valen 0. En cada iteración se busca con BFS, desde $O$, el camino aumentante
 con menos arcos. Solo se recorren arcos con capacidad residual positiva, y los vecinos se
 visitan en el orden de la tabla anterior. Después se envía por ese camino $P_k$ su cuello de
 botella $c_f(P_k)$.
@@ -74,18 +74,18 @@ $$
 Quedan $c_f(O,A) = 3$, $c_f(A,B) = 2$, $c_f(B,D) = 0$ y $c_f(D,T) = 1$.
 
 **Iteración 4.** Desde $O$ se llega a $A$ y, por $(A,B)$, a $B$. No se puede seguir:
-$c_f(A,C) = 0$, $c_f(B,D) = 0$, y los arcos de retroceso que salen de $A$ y de $B$ solo llevan a
+$c_f(A,C) = 0$, $c_f(B,D) = 0$, y los arcos inversos que salen de $A$ y de $B$ solo llevan a
 centros ya visitados.
-La BFS termina sin alcanzar $T$, así que no quedan caminos de aumento y el algoritmo se detiene.
+La BFS termina sin alcanzar $T$, así que no quedan caminos aumentantes y el algoritmo se detiene.
 
-| Iteración | Camino de aumento $P_k$ | Residuales del camino | $c_f(P_k)$ | Valor acumulado |
+| Iteración | Camino aumentante $P_k$ | Residuales del camino | $c_f(P_k)$ | Valor acumulado |
 |:---:|:---|:---:|:---:|:---:|
 | 1 | $O \to A \to C \to T$ | 10, 5, 6 | 5 | 5 |
 | 2 | $O \to B \to D \to T$ | 5, 7, 8 | 5 | 10 |
 | 3 | $O \to A \to B \to D \to T$ | 5, 4, 2, 3 | 2 | 12 |
 | 4 | no existe | — | — | 12 |
 
-En este caso no hizo falta usar arcos de retroceso: ningún camino encontrado por la BFS
+En este caso no hizo falta usar arcos inversos: ningún camino encontrado por la BFS
 devuelve flujo. Sumando lo enviado por cada camino se obtiene el flujo de cada ruta.
 
 ## 5.3 Flujo obtenido
@@ -128,8 +128,7 @@ $$
 S = \lbrace O,\ A,\ B\rbrace, \qquad V \setminus S = \lbrace C,\ D,\ T\rbrace.
 $$
 
-Se escribe $V \setminus S$ para no confundir el lado del destino con el vértice $T$. Los arcos
-que van de $S$ hacia $V \setminus S$ son $(A,C)$ y $(B,D)$, y su capacidad es
+Los arcos que van de $S$ hacia $V \setminus S$ son $(A,C)$ y $(B,D)$, y su capacidad es
 
 $$
 c(S, V \setminus S) = c(A,C) + c(B,D) = 5 + 7 = 12.

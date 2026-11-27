@@ -14,8 +14,8 @@ $$
 V = S \cup (V \setminus S), \qquad S \cap (V \setminus S) = \varnothing, \qquad s \in S, \quad t \in V \setminus S.
 $$
 
-$S$ es el lado del origen y $V \setminus S$ el lado del destino. Como en la sección 5, se escribe
-$V \setminus S$ en lugar de $T$ para no confundir este conjunto con el vértice $T$.
+$S$ es el lado del origen y $V \setminus S$ el lado del destino. Se escribe $V \setminus S$
+en lugar de $T$ para no confundir este conjunto con el vértice $T$.
 
 La **capacidad del corte** es la suma de las capacidades de los arcos que van de $S$ hacia
 $V \setminus S$:

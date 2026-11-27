@@ -36,8 +36,7 @@ página, calcula las tres filas con los mismos extremos elegidos.
 | Modificación 1 | 16 | 16 | $\lbrace O, B, C, F\rbrace$ | $\lbrace A, D, E, G, H, I, T\rbrace$ | $(B,D)$, $(C,G)$, $(F,I)$ |
 | Modificación 2 | 31 | 31 | $\lbrace O, A, B, C, D, E, F\rbrace$ | $\lbrace G, H, I, T\rbrace$ | $(C,G)$, $(D,H)$, $(E,H)$, $(E,I)$, $(F,I)$, $(O,T)$ |
 
-Como en la sección 3, se escribe $V\setminus S$ en lugar de $T$ para no confundir el conjunto con
-el centro $T$; en la tabla de la interfaz esa columna aparece con el nombre `T`. La capacidad del
+En la tabla de la interfaz, la columna $V\setminus S$ aparece con el nombre `T`. La capacidad del
 corte es la suma de las capacidades de los arcos de la última columna, y en los tres casos todos
 esos arcos están saturados.
 

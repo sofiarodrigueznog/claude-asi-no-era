@@ -34,7 +34,7 @@ $$
 
 Se cumple el intervalo exigido: $15 \le |E| = 18 \le 20$.
 
-![Figura 1. Red inicial. Los vértices oscuros son el origen O y el destino T; las etiquetas indican la capacidad de cada ruta en paquetes por hora.](figuras/red_inicial.png)
+![Figura 1.1. Red inicial. Los vértices oscuros son el origen O y el destino T; las etiquetas indican la capacidad de cada ruta en paquetes por hora.](figuras/red_inicial.png)
 
 ## 1.3 Función de capacidad
 
@@ -151,7 +151,7 @@ La suma de los grados de entrada y la de los grados de salida es 18 en ambos cas
 como corresponde a un grafo dirigido.
 
 Prohibir los arcos recíprocos tiene además una consecuencia práctica para el algoritmo. Entre dos
-centros hay a lo más una ruta original, así que en el grafo residual el arco de retroceso $(v, u)$
+centros hay a lo más una ruta original, así que en el grafo residual el arco inverso $(v, u)$
 de cada ruta $(u, v)$ no se confunde con otra ruta real.
 
 Estas reglas no solo se revisaron a mano. La clase `Red` (`src/red.py`) las comprueba al cargar
