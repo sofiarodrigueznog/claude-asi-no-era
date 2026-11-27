@@ -32,7 +32,7 @@ O \to A \to C \to T, \qquad O \to B \to D \to T, \qquad
 O \to A \to B \to D \to T, \qquad O \to A \to C \to D \to T.
 $$
 
-Se eligió así porque el resultado no se ve a simple vista. Desde $O$ salen $10 + 5 = 15$
+Se eligió esta red porque el resultado no se ve a simple vista. Desde $O$ salen $10 + 5 = 15$
 paquetes por hora y a $T$ pueden llegar $6 + 8 = 14$, pero ninguno de esos dos valores es el
 flujo máximo: la restricción está en el medio de la red.
 
