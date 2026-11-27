@@ -1,5 +1,5 @@
 title-meta: "Simulador de una red de distribución de paquetes"
-author-meta: "Sofía Rodríguez, Paulo Villalobos, David Villegas"
+author-meta: "Denys Rodríguez, Paulo Villalobos, David Villegas"
 subject: "Teoría de Grafos INFO1158: Proyecto práctico final"
 lang: es
 documentclass: article
@@ -56,7 +56,7 @@ include-before:
     \vspace{2.5cm}
     {\large\bfseries Integrantes\par}
     \vspace{0.3cm}
-    {\large Sofía Rodríguez\par Paulo Villalobos\par David Villegas\par}
+    {\large Denys Rodríguez\par Paulo Villalobos\par David Villegas\par}
     \vfill
     {\large Repositorio del código fuente:\par}
     \vspace{0.2cm}
